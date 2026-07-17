@@ -1,40 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-  /* Sopra Steria-huisstijl: donkerblauw + wit, met een warme papierachtergrond */
-  --color-navy-50: #eef2fa;
-  --color-navy-100: #dce4f5;
-  --color-navy-200: #b3c4e8;
-  --color-navy-300: #7d97d4;
-  --color-navy-400: #4767b8;
-  --color-navy-500: #1e449e;
-  --color-navy-600: #003087;
-  --color-navy-700: #00266d;
-  --color-navy-800: #001d53;
-  --color-navy-900: #001338;
+  /*
+   * CADA Sovereignty Navigator — ontwerptokens
+   *
+   * Koel porselein + Europees nachtblauw + kobalt als interactiekleur.
+   * Sterrengoud is gereserveerd voor één betekenis: het soevereiniteits-
+   * niveau (de ladder). Goud elders gebruiken is een ontwerpfout.
+   */
+  --color-porselein: #eff2f7;
+  --color-wit: #ffffff;
 
-  --color-paper: #f5f4ef;
-  --color-card: #ffffff;
-  --color-line: #e2e0d6;
-  --color-line-strong: #c9c6b8;
-  --color-ink: #1b1e24;
-  --color-ink-muted: #5b6069;
-  --color-ink-faint: #8a8f98;
+  --color-nacht: #0b1541;
+  --color-nacht-soft: #16225e;
+  --color-nacht-line: #2b3878;
 
-  --color-ok: #1a7f37;
-  --color-ok-bg: #eaf5ec;
-  --color-warn: #9a6700;
-  --color-warn-bg: #fbf2dc;
+  --color-kobalt: #2544c9;
+  --color-kobalt-diep: #16277f;
+  --color-kobalt-50: #e9edfb;
+  --color-kobalt-100: #dee5fa;
+  --color-kobalt-200: #b9c6f2;
+
+  --color-goud: #e8b931;
+  --color-goud-diep: #a37c10;
+
+  --color-ink: #131722;
+  --color-ink-muted: #4a5468;
+  --color-ink-faint: #8a93a8;
+  --color-line: #d8dee9;
+  --color-line-strong: #b7c1d2;
+
+  --color-ok: #157a46;
+  --color-ok-bg: #e7f4ec;
+  --color-warn: #96660a;
+  --color-warn-bg: #faf0d7;
   --color-alert: #b3261e;
   --color-alert-bg: #fbeceb;
 
-  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
   --font-sans: var(--font-public-sans), system-ui, "Segoe UI", sans-serif;
   --font-mono: var(--font-plex-mono), "SFMono-Regular", Consolas, monospace;
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-porselein);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 15px;
@@ -43,11 +52,20 @@ body {
 }
 
 ::selection {
-  background: var(--color-navy-600);
+  background: var(--color-kobalt);
   color: #fff;
 }
 
-/* Kleine kapitaal-labels, zoals in gedrukte rapporten */
+:focus-visible {
+  outline: 2px solid var(--color-kobalt);
+  outline-offset: 2px;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--color-goud);
+}
+
+/* Kleine kapitaal-labels, zoals dossierkenmerken op officiële stukken */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
@@ -57,9 +75,103 @@ body {
   color: var(--color-ink-muted);
 }
 
-.rule {
-  border: 0;
-  border-top: 1px solid var(--color-line);
+/*
+ * De Soevereiniteitsladder — signatuurelement.
+ * Vier oplopende balken; goud gevuld tot en met het niveau, daarboven
+ * alleen contour. Codeert de cumulatieve opbouw van de CADA-niveaus.
+ */
+.ladder {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.ladder > i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+}
+
+.ladder > i:nth-child(1) { height: 4px; }
+.ladder > i:nth-child(2) { height: 7px; }
+.ladder > i:nth-child(3) { height: 10px; }
+.ladder > i:nth-child(4) { height: 13px; }
+
+.ladder > i.vol {
+  background: var(--color-goud);
+}
+
+.ladder > i.leeg {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-line-strong);
+}
+
+.on-dark .ladder > i.leeg {
+  box-shadow: inset 0 0 0 1px var(--color-nacht-line);
+}
+
+/* Grote variant voor de hero */
+.ladder-lg {
+  gap: 6px;
+}
+
+.ladder-lg > i {
+  width: 14px;
+  border-radius: 2px;
+}
+
+.ladder-lg > i:nth-child(1) { height: 18px; }
+.ladder-lg > i:nth-child(2) { height: 32px; }
+.ladder-lg > i:nth-child(3) { height: 46px; }
+.ladder-lg > i:nth-child(4) { height: 60px; }
+
+/* Instapanimatie: de ladder richt zich op bij laden van de pagina */
+@keyframes ladder-rise {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.ladder-animate > i {
+  transform-origin: bottom;
+  animation: ladder-rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+
+.ladder-animate > i:nth-child(1) { animation-delay: 0.1s; }
+.ladder-animate > i:nth-child(2) { animation-delay: 0.22s; }
+.ladder-animate > i:nth-child(3) { animation-delay: 0.34s; }
+.ladder-animate > i:nth-child(4) { animation-delay: 0.46s; }
+
+@keyframes rise-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.rise-in {
+  animation: rise-in 0.45s ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ladder-animate > i,
+  .rise-in {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media print {

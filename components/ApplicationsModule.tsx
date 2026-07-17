@@ -183,13 +183,13 @@ export function ApplicationsModule({
   }
 
   const inputBase =
-    "w-full border border-line-strong bg-card px-3 py-2 text-sm outline-none transition-colors placeholder:text-ink-faint focus:border-navy-600";
+    "w-full rounded border border-line-strong bg-wit px-3 py-2 text-sm transition-colors placeholder:text-ink-faint focus:border-kobalt";
 
   return (
     <div className="space-y-8">
       {/* Overzicht van toegevoegde toepassingen */}
       {applications.length > 0 && (
-        <div className="border border-line bg-card">
+        <div className="overflow-hidden rounded-lg border border-line bg-wit">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line text-left">
@@ -219,7 +219,7 @@ export function ApplicationsModule({
                     <td className="px-4 py-3">
                       <span className="font-semibold text-ink">{app.name}</span>
                       {app.criticalInfra && (
-                        <span className="ml-2 border border-warn/40 bg-warn-bg px-1.5 py-0.5 text-[11px] font-medium text-warn">
+                        <span className="ml-2 rounded border border-warn/40 bg-warn-bg px-1.5 py-0.5 text-[11px] font-medium text-warn">
                           Kritieke infra
                         </span>
                       )}
@@ -237,7 +237,7 @@ export function ApplicationsModule({
                       <button
                         type="button"
                         onClick={() => openEdit(app)}
-                        className="text-sm font-medium text-navy-600 underline-offset-4 hover:underline"
+                        className="text-sm font-medium text-kobalt underline-offset-4 hover:underline"
                       >
                         Bewerken
                       </button>
@@ -261,9 +261,9 @@ export function ApplicationsModule({
         <button
           type="button"
           onClick={openNew}
-          className="inline-flex items-center gap-2 border border-navy-600 bg-navy-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-700"
+          className="inline-flex items-center gap-2 rounded border border-kobalt bg-kobalt px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep"
         >
-          <span aria-hidden className="font-[family-name:var(--font-mono)]">+</span>
+          <span aria-hidden className="font-mono">+</span>
           Toepassing toevoegen
         </button>
       )}
@@ -272,11 +272,11 @@ export function ApplicationsModule({
       {formOpen && (
         <form
           onSubmit={handleSave}
-          className="border border-line bg-card"
+          className="overflow-hidden rounded-lg border border-line bg-wit"
           aria-label="Toepassingsprofiel"
         >
           <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-4 sm:px-7">
-            <h2 className="font-[family-name:var(--font-serif)] text-xl font-semibold text-ink">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-ink">
               {editingId === "new"
                 ? "Nieuwe toepassing profileren"
                 : "Toepassing bewerken"}
@@ -324,9 +324,9 @@ export function ApplicationsModule({
                   return (
                     <label
                       key={dt.key}
-                      className={`flex cursor-pointer gap-3 border px-3 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer gap-3 rounded border px-3 py-2.5 transition-colors ${
                         checked
-                          ? "border-navy-600 bg-navy-50"
+                          ? "border-kobalt bg-kobalt-50"
                           : "border-line hover:border-line-strong"
                       }`}
                     >
@@ -339,7 +339,7 @@ export function ApplicationsModule({
                             dataTypes: toggle(form.dataTypes, dt.key),
                           })
                         }
-                        className="mt-1 h-3.5 w-3.5 shrink-0 accent-navy-600"
+                        className="mt-1 h-3.5 w-3.5 shrink-0 accent-kobalt"
                       />
                       <span>
                         <span className="block text-sm font-medium text-ink">
@@ -368,9 +368,9 @@ export function ApplicationsModule({
                   return (
                     <label
                       key={reg.key}
-                      className={`flex cursor-pointer items-center gap-3 border px-3 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer items-center gap-3 rounded border px-3 py-2.5 transition-colors ${
                         checked
-                          ? "border-navy-600 bg-navy-50"
+                          ? "border-kobalt bg-kobalt-50"
                           : "border-line hover:border-line-strong"
                       }`}
                     >
@@ -383,7 +383,7 @@ export function ApplicationsModule({
                             regulations: toggle(form.regulations, reg.key),
                           })
                         }
-                        className="h-3.5 w-3.5 shrink-0 accent-navy-600"
+                        className="h-3.5 w-3.5 shrink-0 accent-kobalt"
                       />
                       <span className="text-sm font-medium text-ink">
                         {reg.label}
@@ -406,9 +406,9 @@ export function ApplicationsModule({
                   return (
                     <label
                       key={impact.key}
-                      className={`flex cursor-pointer gap-3 border px-3 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer gap-3 rounded border px-3 py-2.5 transition-colors ${
                         checked
-                          ? "border-navy-600 bg-navy-50"
+                          ? "border-kobalt bg-kobalt-50"
                           : "border-line hover:border-line-strong"
                       }`}
                     >
@@ -419,7 +419,7 @@ export function ApplicationsModule({
                         onChange={() =>
                           setForm({ ...form, impactLevel: impact.key })
                         }
-                        className="mt-1 h-3.5 w-3.5 shrink-0 accent-navy-600"
+                        className="mt-1 h-3.5 w-3.5 shrink-0 accent-kobalt"
                       />
                       <span>
                         <span className="block text-sm font-medium text-ink">
@@ -450,9 +450,9 @@ export function ApplicationsModule({
                   return (
                     <label
                       key={opt.label}
-                      className={`flex cursor-pointer items-center gap-2.5 border px-5 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer items-center gap-2.5 rounded border px-5 py-2.5 transition-colors ${
                         checked
-                          ? "border-navy-600 bg-navy-50"
+                          ? "border-kobalt bg-kobalt-50"
                           : "border-line hover:border-line-strong"
                       }`}
                     >
@@ -463,7 +463,7 @@ export function ApplicationsModule({
                         onChange={() =>
                           setForm({ ...form, criticalInfra: opt.value })
                         }
-                        className="h-3.5 w-3.5 accent-navy-600"
+                        className="h-3.5 w-3.5 accent-kobalt"
                       />
                       <span className="text-sm font-medium text-ink">
                         {opt.label}
@@ -487,9 +487,9 @@ export function ApplicationsModule({
                   return (
                     <label
                       key={supplier}
-                      className={`flex cursor-pointer items-center gap-3 border px-3 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer items-center gap-3 rounded border px-3 py-2.5 transition-colors ${
                         checked
-                          ? "border-navy-600 bg-navy-50"
+                          ? "border-kobalt bg-kobalt-50"
                           : "border-line hover:border-line-strong"
                       }`}
                     >
@@ -502,7 +502,7 @@ export function ApplicationsModule({
                             suppliers: toggle(form.suppliers, supplier),
                           })
                         }
-                        className="h-3.5 w-3.5 shrink-0 accent-navy-600"
+                        className="h-3.5 w-3.5 shrink-0 accent-kobalt"
                       />
                       <span className="text-sm font-medium text-ink">
                         {supplier}
@@ -527,7 +527,7 @@ export function ApplicationsModule({
           </div>
 
           {/* Voorlopige niveau-indicatie + acties */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line bg-paper px-5 py-4 sm:px-7">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line bg-porselein px-5 py-4 sm:px-7">
             <div className="flex items-center gap-3">
               {previewLevel !== null ? (
                 <>
@@ -547,7 +547,7 @@ export function ApplicationsModule({
               <button
                 type="submit"
                 disabled={busy}
-                className="border border-navy-600 bg-navy-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-navy-700 disabled:opacity-60"
+                className="rounded border border-kobalt bg-kobalt px-5 py-2 text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep disabled:opacity-60"
               >
                 {busy
                   ? "Bezig met opslaan…"

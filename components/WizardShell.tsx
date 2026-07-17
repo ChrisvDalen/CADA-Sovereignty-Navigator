@@ -14,23 +14,23 @@ export function WizardShell({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-navy-600 text-white">
-        <div className="mx-auto flex w-full max-w-5xl items-baseline justify-between gap-4 px-6 py-3">
-          <Link href="/" className="flex items-baseline gap-3">
-            <span className="font-[family-name:var(--font-serif)] text-lg font-semibold tracking-tight">
-              CADA <span className="font-normal italic">Sovereignty Navigator</span>
+      <header className="on-dark bg-nacht text-white">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-3">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="font-display text-lg font-bold tracking-tight">
+              CADA Sovereignty Navigator
             </span>
           </Link>
           <span
-            className="hidden truncate font-[family-name:var(--font-mono)] text-xs text-navy-200 sm:block"
+            className="hidden truncate font-mono text-xs text-kobalt-200 sm:block"
             title={orgName}
           >
-            {orgName}
+            Dossier · {orgName}
           </span>
         </div>
       </header>
 
-      <nav aria-label="Voortgang" className="border-b border-line bg-card">
+      <nav aria-label="Voortgang" className="border-b border-line bg-wit">
         <div className="mx-auto w-full max-w-5xl px-6">
           <p className="eyebrow pt-4">
             Stap {currentStep} van {WIZARD_STEPS.length}
@@ -47,13 +47,13 @@ export function WizardShell({
                     aria-current={active ? "step" : undefined}
                     className={`flex items-baseline gap-2 border-b-2 pb-3 pt-2 text-sm transition-colors ${
                       active
-                        ? "border-navy-600 font-semibold text-navy-600"
+                        ? "border-kobalt font-semibold text-kobalt"
                         : done
-                          ? "border-transparent text-ink hover:border-navy-200"
+                          ? "border-transparent text-ink hover:border-kobalt-200"
                           : "border-transparent text-ink-faint hover:border-line hover:text-ink-muted"
                     }`}
                   >
-                    <span className="font-[family-name:var(--font-mono)] text-xs">
+                    <span className="font-mono text-xs">
                       {String(n).padStart(2, "0")}
                     </span>
                     {step.label}
@@ -72,7 +72,7 @@ export function WizardShell({
           <span>
             CADA Sovereignty Navigator — indicatief instrument, geen juridisch advies.
           </span>
-          <span className="font-[family-name:var(--font-mono)]">
+          <span className="font-mono">
             Cloud and AI Development Act · van kracht per augustus 2026
           </span>
         </div>

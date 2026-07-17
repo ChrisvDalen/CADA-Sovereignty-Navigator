@@ -24,7 +24,7 @@ export default async function LeveranciersPage({
     >
       <header className="mb-8 max-w-3xl">
         <p className="eyebrow">Module 2 · Leverancierstoets</p>
-        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">
           Toets uw huidige leveranciers
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
@@ -36,7 +36,7 @@ export default async function LeveranciersPage({
       </header>
 
       {assessment.applications.length === 0 ? (
-        <p className="border border-line bg-card px-5 py-6 text-sm text-ink-muted">
+        <p className="rounded-lg border border-line bg-wit px-5 py-6 text-sm text-ink-muted">
           U heeft nog geen toepassingen geprofileerd. Ga terug naar stap 1 om een
           toepassing toe te voegen.
         </p>
@@ -45,10 +45,10 @@ export default async function LeveranciersPage({
           {assessment.applications.map((app) => {
             const compliance = checkCompliance(app.suppliers, app.recommendedLevel);
             return (
-              <section key={app.id} className="border border-line bg-card">
+              <section key={app.id} className="overflow-hidden rounded-lg border border-line bg-wit">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
                   <div className="flex items-center gap-3">
-                    <h2 className="font-[family-name:var(--font-serif)] text-lg font-semibold text-ink">
+                    <h2 className="font-display text-lg font-semibold text-ink">
                       {app.name}
                     </h2>
                     <span className="text-xs text-ink-muted">
@@ -57,17 +57,17 @@ export default async function LeveranciersPage({
                     <LevelBadge level={app.recommendedLevel} showName />
                   </div>
                   {compliance.status === "ok" && (
-                    <span className="inline-flex items-center gap-2 border border-ok/30 bg-ok-bg px-3 py-1 text-sm font-semibold text-ok">
+                    <span className="inline-flex items-center gap-2 rounded border border-ok/30 bg-ok-bg px-3 py-1 text-sm font-semibold text-ok">
                       <span aria-hidden>✓</span> Niveau haalbaar
                     </span>
                   )}
                   {compliance.status === "gap" && (
-                    <span className="inline-flex items-center gap-2 border border-alert/30 bg-alert-bg px-3 py-1 text-sm font-semibold text-alert">
+                    <span className="inline-flex items-center gap-2 rounded border border-alert/30 bg-alert-bg px-3 py-1 text-sm font-semibold text-alert">
                       <span aria-hidden>✕</span> Gap: niveau niet haalbaar
                     </span>
                   )}
                   {compliance.status === "unknown" && (
-                    <span className="inline-flex items-center gap-2 border border-warn/40 bg-warn-bg px-3 py-1 text-sm font-semibold text-warn">
+                    <span className="inline-flex items-center gap-2 rounded border border-warn/40 bg-warn-bg px-3 py-1 text-sm font-semibold text-warn">
                       <span aria-hidden>?</span> Handmatige toets nodig
                     </span>
                   )}
@@ -103,7 +103,7 @@ export default async function LeveranciersPage({
                               <LevelBadge level={supplier.maxLevel} size="sm" />
                             </>
                           ) : (
-                            <span className="font-[family-name:var(--font-mono)] text-xs text-ink-faint">
+                            <span className="font-mono text-xs text-ink-faint">
                               onbekend
                             </span>
                           )}

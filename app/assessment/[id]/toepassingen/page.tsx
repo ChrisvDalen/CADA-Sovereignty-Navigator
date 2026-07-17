@@ -25,7 +25,7 @@ export default async function ToepassingenPage({
     >
       <header className="mb-8 max-w-3xl">
         <p className="eyebrow">Module 1 · Toepassingsprofiler</p>
-        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">
           Profileer uw cloudtoepassingen
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
