@@ -33,36 +33,62 @@ in `localStorage`, zodat een analyse later hervat kan worden.
 
 ## Techniek
 
-- Next.js (App Router) + TypeScript + Tailwind CSS
-- Next.js API-routes (geen aparte server)
-- SQLite via Prisma
-- jsPDF + jspdf-autotable (PDF), SheetJS/xlsx (Excel)
-- UI volledig in het Nederlands, responsive op 1280 px en 768 px
+- **Frontend** (`frontend/`): Angular 22 — standalone components, signals,
+  zoneless change detection, nieuwe `@if`/`@for`-controlflow en de
+  `resource()`-API — met TypeScript en Tailwind CSS 4.
+- **Backend** (`backend/`): Java 25 (LTS) met Spring Boot; REST-API met
+  server-side beslisboom en validatie.
+- SQLite via Spring JDBC (`JdbcClient`).
+- jsPDF + jspdf-autotable (PDF), SheetJS/xlsx (Excel) — client-side.
+- UI volledig in het Nederlands, responsive op 1280 px en 768 px.
 
 ## Ontwikkelen
 
+Vereisten: JDK 25, Maven 3.9+, Node.js 24+.
+
+Backend (poort 8080; maakt `backend/cada.db` aan bij de eerste start):
+
 ```bash
+cd backend
+mvn spring-boot:run
+```
+
+Frontend (poort 4200; proxyt `/api` naar de backend):
+
+```bash
+cd frontend
 npm install
-cp .env.example .env        # DATABASE_URL="file:./dev.db"
-npx prisma db push          # maakt prisma/dev.db aan
-npm run dev                 # http://localhost:3000
+npm start                   # http://localhost:4200
 ```
 
-Productie:
+Tests en productie-builds:
 
 ```bash
-npm run build
-npm run start
+cd backend && mvn verify           # compileert + draait unit tests
+cd frontend && npm run build       # productie-build in dist/
 ```
+
+Voor een productie-deployment serveer je de inhoud van
+`frontend/dist/frontend/browser` via een webserver die `/api` doorstuurt
+naar de Spring Boot-applicatie (`mvn package` → `target/*.jar`).
 
 ## Structuur
 
 ```
-app/          pagina's (App Router) en API-routes
-components/   herbruikbare UI-componenten
-lib/          beslisboom, leveranciersdata, rapportage- en exportlogica
-prisma/       schema en lokale SQLite-database
+frontend/     Angular 22-app (pagina's, componenten, export- en domeinlogica)
+backend/      Spring Boot REST-API (Java 25) + SQLite-persistentie
 ```
+
+## API
+
+| Methode | Pad | Doel |
+| --- | --- | --- |
+| POST | `/api/assessments` | Nieuwe analyse starten |
+| GET | `/api/assessments/{id}` | Analyse incl. toepassingen ophalen |
+| PATCH | `/api/assessments/{id}` | Organisatienaam wijzigen |
+| POST | `/api/assessments/{id}/applications` | Toepassing toevoegen (niveau wordt server-side berekend) |
+| PUT | `/api/applications/{id}` | Toepassing bijwerken |
+| DELETE | `/api/applications/{id}` | Toepassing verwijderen |
 
 ## Disclaimer
 
