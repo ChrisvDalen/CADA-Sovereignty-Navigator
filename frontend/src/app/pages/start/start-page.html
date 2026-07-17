@@ -1,0 +1,124 @@
+<div class="flex min-h-screen flex-1 flex-col lg:flex-row">
+  <!-- Linkerpaneel: context en de vier niveaus -->
+  <section class="bg-navy-600 text-white lg:w-[55%]">
+    <div
+      class="mx-auto flex h-full max-w-2xl flex-col justify-between gap-12 px-6 py-10 lg:px-12 lg:py-14"
+    >
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-navy-200">
+          Cloud and AI Development Act · augustus 2026
+        </p>
+        <h1
+          class="mt-6 font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl"
+        >
+          CADA Sovereignty
+          <br />
+          <span class="italic font-normal">Navigator</span>
+        </h1>
+        <p class="mt-6 max-w-lg text-[15px] leading-relaxed text-navy-100">
+          De CADA (Cloud and AI Development Act) verplicht overheidsinstanties om per
+          cloudtoepassing te bepalen welk soevereiniteitsniveau van toepassing is. Deze
+          tool begeleidt u door dat proces in vier stappen: profileer uw toepassingen,
+          toets uw leveranciers, ontvang een gap-rapport met roadmap en exporteer het
+          resultaat.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="font-mono text-[11px] uppercase tracking-[0.18em] text-navy-200">
+          De vier soevereiniteitsniveaus
+        </h2>
+        <dl class="mt-4 divide-y divide-white/15 border-y border-white/15">
+          @for (level of levels; track level) {
+            <div class="flex gap-4 py-3">
+              <dt class="w-32 shrink-0 sm:w-40">
+                <span class="font-mono text-sm font-medium">N{{ level }}</span>
+                <span class="block text-sm font-semibold leading-snug">
+                  {{ levelInfo[level].name }}
+                </span>
+              </dt>
+              <dd class="text-sm leading-snug text-navy-100">
+                {{ levelInfo[level].description }}
+              </dd>
+            </div>
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rechterpaneel: startformulier -->
+  <section class="flex flex-1 items-center bg-paper">
+    <div class="mx-auto w-full max-w-md px-6 py-12 lg:px-10">
+      <div class="border border-line bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,0.04)] sm:p-8">
+        <p class="eyebrow">Stap 1 van 4 · Voorbereiding</p>
+        <h2 class="mt-2 font-serif text-2xl font-semibold text-ink">
+          Begin uw risicoanalyse
+        </h2>
+        <p class="mt-2 mb-6 text-sm text-ink-muted">
+          Vul de naam van uw organisatie in. Uw voortgang wordt automatisch bewaard,
+          zodat u de analyse later kunt hervatten.
+        </p>
+
+        <div class="space-y-6">
+          <form (submit)="$event.preventDefault(); start()" class="space-y-4">
+            <div>
+              <label for="orgName" class="mb-1.5 block text-sm font-semibold text-ink">
+                Naam van uw organisatie
+              </label>
+              <input
+                id="orgName"
+                type="text"
+                name="orgName"
+                [ngModel]="orgName()"
+                (ngModelChange)="orgName.set($event)"
+                placeholder="Bijv. Gemeente Utrecht"
+                autocomplete="organization"
+                class="w-full border border-line-strong bg-card px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-ink-faint focus:border-navy-600"
+              />
+            </div>
+            @if (error(); as message) {
+              <p class="border border-alert/30 bg-alert-bg px-3 py-2 text-sm text-alert">
+                {{ message }}
+              </p>
+            }
+            <button
+              type="submit"
+              [disabled]="!orgName().trim() || busy()"
+              class="w-full border border-navy-600 bg-navy-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:border-line disabled:bg-paper disabled:text-ink-faint"
+            >
+              {{ busy() ? 'Bezig met starten…' : 'Start de risicoanalyse' }}
+            </button>
+          </form>
+
+          @if (resume(); as info) {
+            <div class="border border-line bg-paper px-4 py-3">
+              <p class="eyebrow mb-1">Eerdere sessie gevonden</p>
+              <p class="text-sm text-ink">
+                <span class="font-semibold">{{ info.orgName }}</span>
+                —
+                {{
+                  info.applicationCount === 1
+                    ? '1 toepassing'
+                    : info.applicationCount + ' toepassingen'
+                }}
+                geprofileerd.
+              </p>
+              <button
+                type="button"
+                (click)="resumeSession(info.id)"
+                class="mt-2 text-sm font-semibold text-navy-600 underline underline-offset-4 hover:text-navy-700"
+              >
+                Sessie hervatten →
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+      <p class="mt-4 px-1 text-xs leading-relaxed text-ink-muted">
+        Dit instrument is indicatief. Raadpleeg altijd een juridisch adviseur voor een
+        bindende interpretatie van de CADA.
+      </p>
+    </div>
+  </section>
+</div>
