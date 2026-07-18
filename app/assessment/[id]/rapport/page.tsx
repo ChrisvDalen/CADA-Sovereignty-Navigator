@@ -10,20 +10,20 @@ export const dynamic = "force-dynamic";
 function StatusChip({ status }: { status: "OK" | "GAP" | "ONBEKEND" }) {
   if (status === "OK") {
     return (
-      <span className="inline-flex items-center gap-1.5 border border-ok/30 bg-ok-bg px-2 py-0.5 font-[family-name:var(--font-mono)] text-[11px] font-semibold text-ok">
+      <span className="inline-flex items-center gap-1.5 rounded border border-ok/30 bg-ok-bg px-2 py-0.5 font-mono text-[11px] font-semibold text-ok">
         ✓ OK
       </span>
     );
   }
   if (status === "GAP") {
     return (
-      <span className="inline-flex items-center gap-1.5 border border-alert/30 bg-alert-bg px-2 py-0.5 font-[family-name:var(--font-mono)] text-[11px] font-semibold text-alert">
+      <span className="inline-flex items-center gap-1.5 rounded border border-alert/30 bg-alert-bg px-2 py-0.5 font-mono text-[11px] font-semibold text-alert">
         ✕ GAP
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 border border-warn/40 bg-warn-bg px-2 py-0.5 font-[family-name:var(--font-mono)] text-[11px] font-semibold text-warn">
+    <span className="inline-flex items-center gap-1.5 rounded border border-warn/40 bg-warn-bg px-2 py-0.5 font-mono text-[11px] font-semibold text-warn">
       ? ONBEKEND
     </span>
   );
@@ -50,7 +50,7 @@ export default async function RapportPage({
     >
       <header className="mb-8 max-w-3xl">
         <p className="eyebrow">Module 3 · Gap-rapport &amp; roadmap</p>
-        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">
           Gap-rapport voor {assessment.orgName}
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
@@ -68,7 +68,7 @@ export default async function RapportPage({
       </header>
 
       {rows.length === 0 ? (
-        <p className="border border-line bg-card px-5 py-6 text-sm text-ink-muted">
+        <p className="rounded-lg border border-line bg-wit px-5 py-6 text-sm text-ink-muted">
           U heeft nog geen toepassingen geprofileerd. Ga terug naar stap 1 om een
           toepassing toe te voegen.
         </p>
@@ -77,7 +77,7 @@ export default async function RapportPage({
           {/* 1. Samenvattingstabel */}
           <section>
             <h2 className="eyebrow mb-3">1 · Samenvatting</h2>
-            <div className="overflow-x-auto border border-line bg-card">
+            <div className="overflow-x-auto rounded-lg border border-line bg-wit">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b border-line text-left">
@@ -110,7 +110,7 @@ export default async function RapportPage({
                         {row.compliance.achievableLevel !== null ? (
                           <LevelBadge level={row.compliance.achievableLevel} />
                         ) : (
-                          <span className="font-[family-name:var(--font-mono)] text-xs text-ink-faint">
+                          <span className="font-mono text-xs text-ink-faint">
                             onbekend
                           </span>
                         )}
@@ -132,9 +132,9 @@ export default async function RapportPage({
               {priorityRows.map((row, index) => (
                 <li
                   key={row.app.id}
-                  className="flex flex-wrap items-center gap-x-5 gap-y-2 border border-line bg-card px-4 py-3"
+                  className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded border border-line bg-wit px-4 py-3"
                 >
-                  <span className="font-[family-name:var(--font-mono)] text-sm font-semibold text-navy-600">
+                  <span className="font-mono text-sm font-semibold text-kobalt">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="min-w-40 flex-1 text-sm font-semibold text-ink">
@@ -162,9 +162,9 @@ export default async function RapportPage({
             <h2 className="eyebrow mb-3">3 · Aanbevelingen per toepassing</h2>
             <div className="space-y-4">
               {priorityRows.map((row) => (
-                <article key={row.app.id} className="border border-line bg-card">
+                <article key={row.app.id} className="overflow-hidden rounded-lg border border-line bg-wit">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
-                    <h3 className="font-[family-name:var(--font-serif)] text-base font-semibold text-ink">
+                    <h3 className="font-display text-base font-semibold text-ink">
                       {row.app.name}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export default async function RapportPage({
                       <li key={i} className="flex gap-3 text-sm leading-relaxed">
                         <span
                           aria-hidden
-                          className="mt-0.5 font-[family-name:var(--font-mono)] text-xs text-navy-400"
+                          className="mt-0.5 font-mono text-xs text-kobalt"
                         >
                           →
                         </span>
@@ -191,14 +191,14 @@ export default async function RapportPage({
           </section>
 
           {/* 4. Sopra Steria call-to-action */}
-          <section className="bg-navy-600 px-6 py-8 text-white sm:px-8">
-            <p className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.18em] text-navy-200">
+          <section className="on-dark rounded-lg bg-nacht px-6 py-8 text-white sm:px-8">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt-200">
               Vervolgstap
             </p>
-            <h2 className="mt-2 max-w-2xl font-[family-name:var(--font-serif)] text-2xl font-semibold leading-snug">
+            <h2 className="mt-2 max-w-2xl font-display text-2xl font-semibold leading-snug">
               Wilt u hulp bij de implementatie van deze aanbevelingen?
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-navy-100">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-kobalt-100">
               Sopra Steria begeleidt overheidsinstanties bij CADA-compliance: van
               risicoanalyse en leveranciersselectie tot migratie en certificering.
             </p>
@@ -206,7 +206,7 @@ export default async function RapportPage({
               href="https://www.soprasteria.nl/contact"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-2 border border-white bg-white px-5 py-2.5 text-sm font-semibold text-navy-600 transition-colors hover:bg-navy-50"
+              className="mt-5 inline-flex items-center gap-2 rounded border border-white bg-white px-5 py-2.5 text-sm font-semibold text-kobalt transition-colors hover:bg-kobalt-50"
             >
               Neem contact op <span aria-hidden>→</span>
             </a>

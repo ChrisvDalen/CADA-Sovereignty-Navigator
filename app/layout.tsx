@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Source_Serif_4, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Archivo, Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 const publicSans = Public_Sans({
@@ -32,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${sourceSerif.variable} ${publicSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${publicSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

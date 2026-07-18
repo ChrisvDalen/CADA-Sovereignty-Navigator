@@ -23,7 +23,7 @@ export default async function ExportPage({
     >
       <header className="mb-8 max-w-3xl">
         <p className="eyebrow">Module 4 · Exporteren</p>
-        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">
           Exporteer uw rapportage
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
@@ -35,7 +35,7 @@ export default async function ExportPage({
 
       <ExportPanel assessment={assessment} />
 
-      <div className="mt-8 border border-line bg-card px-5 py-4">
+      <div className="mt-8 rounded-lg border border-line bg-wit px-5 py-4">
         <p className="text-xs leading-relaxed text-ink-muted">
           <span className="font-semibold text-ink">Disclaimer.</span> Dit rapport
           is indicatief. Raadpleeg altijd een juridisch adviseur voor bindende
