@@ -8,10 +8,15 @@ import {
   AssessmentDto,
   AssessmentSummary,
   LevelPreview,
+  MagicLinkResult,
   Meta,
   ReportResponse,
+  ShareLinkDto,
+  SharedReport,
+  ShareStatus,
   SupplierDetail,
   SupplierPayload,
+  UserDto,
 } from './models';
 
 /** REST-client voor de Spring Boot-backend. */
@@ -73,6 +78,46 @@ export class CadaApi {
 
   deleteSupplier(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`/api/suppliers/${id}`)).then(() => undefined);
+  }
+
+  // — Authenticatie —
+
+  requestMagicLink(email: string): Promise<MagicLinkResult> {
+    return firstValueFrom(this.http.post<MagicLinkResult>('/api/auth/magic-link', { email }));
+  }
+
+  createSession(token: string): Promise<UserDto> {
+    return firstValueFrom(this.http.post<UserDto>('/api/auth/sessions', { token }));
+  }
+
+  me(): Promise<UserDto> {
+    return firstValueFrom(this.http.get<UserDto>('/api/auth/me'));
+  }
+
+  logout(): Promise<void> {
+    return firstValueFrom(this.http.delete<void>('/api/auth/sessions/current')).then(
+      () => undefined,
+    );
+  }
+
+  // — Deellinks (alleen-lezen rapport) —
+
+  createShareLink(assessmentId: string): Promise<ShareLinkDto> {
+    return firstValueFrom(this.http.post<ShareLinkDto>(`/api/assessments/${assessmentId}/share`, {}));
+  }
+
+  shareStatus(assessmentId: string): Promise<ShareStatus> {
+    return firstValueFrom(this.http.get<ShareStatus>(`/api/assessments/${assessmentId}/share`));
+  }
+
+  revokeShareLink(assessmentId: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/assessments/${assessmentId}/share`)).then(
+      () => undefined,
+    );
+  }
+
+  getSharedReport(token: string): Promise<SharedReport> {
+    return firstValueFrom(this.http.get<SharedReport>(`/api/share/${token}`));
   }
 
   /** Haalt de Nederlandstalige foutmelding uit een backend-antwoord. */

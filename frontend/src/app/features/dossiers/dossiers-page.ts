@@ -4,12 +4,13 @@ import { RouterLink } from '@angular/router';
 
 import { CadaApi } from '../../core/cada-api';
 import { AssessmentSummary } from '../../core/models';
+import { AccountChip } from '../../shared/account-chip';
 
 /** Portfolio-dashboard: alle dossiers met hun compliance-statistiek. */
 @Component({
   selector: 'app-dossiers-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, AccountChip],
   template: `
     <div class="flex min-h-screen flex-col">
       <header class="on-dark bg-nacht text-white">
@@ -17,7 +18,10 @@ import { AssessmentSummary } from '../../core/models';
           <a routerLink="/" class="font-display text-lg font-bold tracking-tight">
             CADA Sovereignty Navigator
           </a>
-          <span class="font-mono text-xs text-kobalt-200">Dossieroverzicht</span>
+          <span class="flex items-center gap-4">
+            <span class="font-mono text-xs text-kobalt-200">Dossieroverzicht</span>
+            <app-account-chip />
+          </span>
         </div>
       </header>
 

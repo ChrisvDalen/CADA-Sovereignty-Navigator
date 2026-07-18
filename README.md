@@ -41,9 +41,19 @@ Daarnaast:
 - **Leveranciersbeheer** (`/beheer/leveranciers`) — de referentiedataset staat
   in de database en is te beheren zonder redeploy; wijzigingen werken direct
   door in de leverancierstoets van alle dossiers.
+- **Authenticatie** (`/login`) — aanmelden via een magic-link per e-mail
+  (geen wachtwoord). Dossiers zijn persoonlijk: alleen de eigenaar kan ze
+  inzien en bewerken. Zonder mailserver wordt de aanmeldlink in het serverlog
+  geschreven; met `cada.auth.expose-login-link: true` (de standaard voor
+  lokaal ontwikkelen) toont de aanmeldpagina de link direct.
+- **Delen met bestuur** (`/delen/{token}`) — per dossier is vanaf het rapport
+  één alleen-lezen deellink aan te maken (en in te trekken) waarmee het
+  gap-rapport zonder aanmelding te bekijken is.
 
-Sessies worden opgeslagen in een lokale H2-database; het sessie-ID staat in
-`localStorage`, zodat een analyse later hervat kan worden.
+Dossiers worden opgeslagen in een lokale H2-database; het dossier-ID staat in
+`localStorage`, zodat een analyse later hervat kan worden. Sessies leven in
+een HttpOnly-cookie (30 dagen); magic-link- en sessietokens worden alleen als
+SHA-256-hash opgeslagen.
 
 ## Architectuur
 
@@ -79,6 +89,15 @@ Vereisten: JDK 25, Maven 3.9+, Node.js ≥ 24.15 (vereist door de Angular 22 CLI
 | POST | `/api/level-preview` | Live niveau-indicatie met motivering |
 | GET/POST | `/api/suppliers` | Leveranciersreferentiedata lezen / toevoegen |
 | PUT/DELETE | `/api/suppliers/{id}` | Leverancier bijwerken / verwijderen |
+| POST | `/api/auth/magic-link` | Aanmeldlink aanvragen (`{ email }`) |
+| POST | `/api/auth/sessions` | Magic-link-token inwisselen voor een sessiecookie |
+| GET | `/api/auth/me` | Aangemelde gebruiker opvragen |
+| DELETE | `/api/auth/sessions/current` | Afmelden |
+| POST/GET/DELETE | `/api/assessments/{id}/share` | Deellink aanmaken / status / intrekken |
+| GET | `/api/share/{token}` | Gedeeld rapport (publiek, alleen-lezen) |
+
+Alle endpoints vereisen een sessiecookie, behalve `/api/auth/**`,
+`/api/share/**` en `/api/meta`.
 
 ## Ontwikkelen
 
@@ -102,10 +121,28 @@ Open vervolgens http://localhost:4200.
 Tests en productiebuilds:
 
 ```bash
-cd backend && mvn verify        # 43 unit- en API-tests (JUnit)
-cd frontend && npm test         # 19 unit-tests (Vitest)
+cd backend && mvn verify        # 50 unit- en API-tests (JUnit)
+cd frontend && npm test         # 23 unit-tests (Vitest)
 cd frontend && npm run build    # productiebundel in dist/
 ```
+
+End-to-end-smoketest (Playwright start zelf de backend-jar en `ng serve`):
+
+```bash
+cd backend && mvn -DskipTests package   # jar bouwen die de test opstart
+cd frontend && npx playwright install chromium   # eenmalig
+cd frontend && npm run e2e
+```
+
+## Continuous integration
+
+Elke push naar `main` en elke pull request draait via GitHub Actions
+(`.github/workflows/ci.yml`) drie jobs:
+
+1. **Backend** — `mvn verify` op Temurin JDK 25;
+2. **Frontend** — `ng test` (Vitest) + productiebuild op Node 24;
+3. **E2E** — de Playwright-smoketest tegen de echte stack (backend-jar met
+   in-memory H2 + Angular-dev-server).
 
 ## Disclaimer
 
