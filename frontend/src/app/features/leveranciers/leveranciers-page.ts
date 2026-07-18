@@ -96,6 +96,11 @@ import { WizardShell } from '../../shared/wizard-shell';
                                 : 'Deze leverancier staat niet in de referentiedataset. Toets jurisdictie, eigendom en certificering handmatig.'
                             }}
                           </p>
+                          @if (supplier.known && metaStore.supplierFacts(supplier.name)) {
+                            <p class="mt-1 max-w-2xl font-mono text-[11px] leading-snug text-ink-faint">
+                              {{ metaStore.supplierFacts(supplier.name) }}
+                            </p>
+                          }
                         </div>
                         <div class="flex items-center gap-3">
                           @if (supplier.known && supplier.maxLevel !== null) {

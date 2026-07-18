@@ -58,38 +58,6 @@ public final class CadaDomain {
 
     public static final String OTHER_SUPPLIER = "Anders";
 
-    /** Volgorde van de leveranciers zoals getoond in de vragenlijst. */
-    public static final List<String> KNOWN_SUPPLIERS = List.of(
-            "AWS (Amazon)",
-            "Microsoft Azure",
-            "Google Cloud",
-            "IBM Cloud",
-            "Oracle Cloud",
-            "KPN Cloud / Intermax",
-            "Cloudferro",
-            "SURF",
-            "OVHcloud");
-
-    public static final Map<String, SupplierInfo> SUPPLIER_DATA = Map.of(
-            "AWS (Amazon)", new SupplierInfo(1,
-                    "Valt onder de US Cloud Act. Kan niet voldoen aan niveau 2 of hoger vanwege de Amerikaanse moedermaatschappij."),
-            "Microsoft Azure", new SupplierInfo(1,
-                    "Valt onder de US Cloud Act en FISA 702. Europese datacenters voldoen aan niveau 1, maar niet aan niveau 2 of hoger."),
-            "Google Cloud", new SupplierInfo(1,
-                    "Zelfde situatie als AWS en Azure — de Amerikaanse jurisdictie is doorslaggevend."),
-            "IBM Cloud", new SupplierInfo(2,
-                    "Deels onafhankelijke Europese entiteit mogelijk, afhankelijk van de contractstructuur. De moedermaatschappij is gevestigd in de VS."),
-            "Oracle Cloud", new SupplierInfo(1,
-                    "Amerikaanse moedermaatschappij, dezelfde restricties als AWS en Azure."),
-            "KPN Cloud / Intermax", new SupplierInfo(3,
-                    "Nederlands eigendom, geen niet-EU moedermaatschappij."),
-            "Cloudferro", new SupplierInfo(3,
-                    "Europees eigendom, gespecialiseerd in soevereine cloud voor de overheid."),
-            "SURF", new SupplierInfo(4,
-                    "Coöperatie van Nederlandse onderwijsinstellingen. Mogelijke niveau 4-kandidaat."),
-            "OVHcloud", new SupplierInfo(3,
-                    "Frans eigendom, Europese entiteit, voldoet aan de niveau 3-criteria."));
-
     public static final Map<Integer, LevelInfo> LEVEL_INFO = Map.of(
             1, new LevelInfo("Locatie", "Niveau 1 — Locatie",
                     "De data staat fysiek op Europees grondgebied. Dit is het basisniveau voor al het cloudgebruik door overheidsinstanties.",

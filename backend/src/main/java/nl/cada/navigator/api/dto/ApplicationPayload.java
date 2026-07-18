@@ -9,6 +9,7 @@ public record ApplicationPayload(
         List<String> regulations,
         String impactLevel,
         Boolean criticalInfra,
+        Boolean aiProcessing,
         List<String> suppliers,
         String supplierOther) {
 }

@@ -54,7 +54,12 @@ public class CloudApplicationEntity {
 
     private String supplierOther = "";
 
+    private Boolean aiProcessing = false;
+
     private int recommendedLevel;
+
+    @Column(length = 512)
+    private String levelReason = "";
 
     private Instant createdAt = Instant.now();
 
@@ -124,6 +129,22 @@ public class CloudApplicationEntity {
 
     public void setSupplierOther(String supplierOther) {
         this.supplierOther = supplierOther;
+    }
+
+    public boolean isAiProcessing() {
+        return Boolean.TRUE.equals(aiProcessing);
+    }
+
+    public void setAiProcessing(boolean aiProcessing) {
+        this.aiProcessing = aiProcessing;
+    }
+
+    public String getLevelReason() {
+        return levelReason == null ? "" : levelReason;
+    }
+
+    public void setLevelReason(String levelReason) {
+        this.levelReason = levelReason;
     }
 
     public int getRecommendedLevel() {

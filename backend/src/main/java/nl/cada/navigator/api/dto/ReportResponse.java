@@ -10,7 +10,8 @@ public record ReportResponse(AssessmentResponse assessment, List<ReportRow> rows
     /**
      * Eén rij per toepassing. {@code rank} is de 1-gebaseerde positie in de
      * prioriteitenmatrix (hoogste impact + grootste gap bovenaan); de rijen
-     * zelf staan in invoervolgorde.
+     * zelf staan in invoervolgorde. {@code phase} is de roadmapfase die uit
+     * de gap en het aanbevolen niveau volgt.
      */
     public record ReportRow(
             ApplicationResponse app,
@@ -20,6 +21,7 @@ public record ReportResponse(AssessmentResponse assessment, List<ReportRow> rows
             String impactLabel,
             List<String> supplierNames,
             String statusLabel,
-            int rank) {
+            int rank,
+            String phase) {
     }
 }

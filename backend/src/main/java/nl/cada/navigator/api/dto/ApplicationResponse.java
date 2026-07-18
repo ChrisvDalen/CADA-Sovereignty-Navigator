@@ -11,9 +11,11 @@ public record ApplicationResponse(
         List<String> regulations,
         String impactLevel,
         boolean criticalInfra,
+        boolean aiProcessing,
         List<String> suppliers,
         String supplierOther,
-        int recommendedLevel) {
+        int recommendedLevel,
+        String levelReason) {
 
     public static ApplicationResponse from(CloudApplicationEntity app) {
         return new ApplicationResponse(
@@ -23,8 +25,10 @@ public record ApplicationResponse(
                 List.copyOf(app.getRegulations()),
                 app.getImpactLevel(),
                 app.isCriticalInfra(),
+                app.isAiProcessing(),
                 List.copyOf(app.getSuppliers()),
                 app.getSupplierOther(),
-                Math.clamp(app.getRecommendedLevel(), 1, 4));
+                Math.clamp(app.getRecommendedLevel(), 1, 4),
+                app.getLevelReason());
     }
 }

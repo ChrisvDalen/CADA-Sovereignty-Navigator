@@ -30,7 +30,7 @@ import { WizardShell } from '../../shared/wizard-shell';
             </p>
           </header>
 
-          <div class="grid gap-5 md:grid-cols-2">
+          <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             <div class="flex flex-col rounded-lg border border-line bg-wit p-6">
               <p class="font-mono text-xs font-medium text-kobalt">.PDF</p>
               <h2 class="mt-2 font-display text-xl font-semibold text-ink">Rapport als PDF</h2>
@@ -64,6 +64,23 @@ import { WizardShell } from '../../shared/wizard-shell';
                 class="mt-5 w-full rounded border border-kobalt bg-wit px-4 py-2.5 text-sm font-semibold text-kobalt transition-colors hover:bg-kobalt-50 disabled:cursor-not-allowed disabled:border-line disabled:text-ink-faint"
               >
                 {{ busy() === 'excel' ? 'Excel wordt gegenereerd…' : 'Excel exporteren' }}
+              </button>
+            </div>
+
+            <div class="flex flex-col rounded-lg border border-line bg-wit p-6">
+              <p class="font-mono text-xs font-medium text-kobalt">.DOCX</p>
+              <h2 class="mt-2 font-display text-xl font-semibold text-ink">Rapport als Word</h2>
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-ink-muted">
+                Bewerkbaar rapport met samenvattingstabel, roadmap per fase en aanbevelingen.
+                Geschikt om op te nemen in uw eigen rapportagesjablonen.
+              </p>
+              <button
+                type="button"
+                (click)="downloadWord()"
+                [disabled]="disabled() || busy() !== null"
+                class="mt-5 w-full rounded border border-kobalt bg-wit px-4 py-2.5 text-sm font-semibold text-kobalt transition-colors hover:bg-kobalt-50 disabled:cursor-not-allowed disabled:border-line disabled:text-ink-faint"
+              >
+                {{ busy() === 'word' ? 'Word wordt gegenereerd…' : 'Word exporteren' }}
               </button>
             </div>
 
@@ -109,7 +126,7 @@ export class ExportPage {
 
   protected readonly report = signal<ReportResponse | null>(null);
   protected readonly notFound = signal(false);
-  protected readonly busy = signal<'pdf' | 'excel' | null>(null);
+  protected readonly busy = signal<'pdf' | 'excel' | 'word' | null>(null);
   protected readonly error = signal<string | null>(null);
 
   protected disabled(): boolean {
@@ -144,6 +161,22 @@ export class ExportPage {
       exportPdf(report, meta);
     } catch {
       this.error.set('Het PDF-rapport kon niet worden gegenereerd.');
+    } finally {
+      this.busy.set(null);
+    }
+  }
+
+  protected async downloadWord(): Promise<void> {
+    const report = this.report();
+    const meta = this.metaStore.meta();
+    if (!report || !meta || this.busy() || this.disabled()) return;
+    this.busy.set('word');
+    this.error.set(null);
+    try {
+      const { exportWord } = await import('./word-export');
+      await exportWord(report, meta);
+    } catch {
+      this.error.set('Het Word-document kon niet worden gegenereerd.');
     } finally {
       this.busy.set(null);
     }

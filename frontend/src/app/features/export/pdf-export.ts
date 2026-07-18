@@ -233,13 +233,14 @@ export function exportPdf(report: ReportResponse, meta: Meta) {
   autoTable(doc, {
     startY: writer.y,
     margin: { left: MARGIN, right: MARGIN },
-    head: [['#', 'Toepassing', 'Impact', 'Gap', 'Status']],
+    head: [['#', 'Toepassing', 'Impact', 'Gap', 'Status', 'Fase']],
     body: priorityRows.map((row, i) => [
       String(i + 1),
       row.app.name,
       row.impactLabel,
       row.compliance.gap > 0 ? `${row.compliance.gap} niveau(s)` : 'Geen',
       row.statusLabel,
+      row.phase,
     ]),
     styles: {
       font: 'helvetica',
@@ -267,9 +268,12 @@ export function exportPdf(report: ReportResponse, meta: Meta) {
     writer.ensureSpace(28);
     writer.heading(row.app.name, 12);
     writer.paragraph(
-      `Aanbevolen niveau: ${row.app.recommendedLevel} (${levelInfo(row.app.recommendedLevel).name}) · Leverancier(s): ${row.supplierNames.join(', ')} · Status: ${row.statusLabel}`,
+      `Aanbevolen niveau: ${row.app.recommendedLevel} (${levelInfo(row.app.recommendedLevel).name}) · Leverancier(s): ${row.supplierNames.join(', ')} · Status: ${row.statusLabel} · Fase: ${row.phase}`,
       { size: 9, color: MUTED },
     );
+    if (row.app.levelReason) {
+      writer.paragraph(`Motivering: ${row.app.levelReason}`, { size: 9, style: 'italic' });
+    }
     row.recommendations.forEach((advies) => writer.bullet(advies));
     writer.divider();
   });

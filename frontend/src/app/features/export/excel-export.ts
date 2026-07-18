@@ -14,8 +14,11 @@ export function exportExcel(report: ReportResponse, meta: Meta) {
     'Haalbaar niveau':
       row.compliance.achievableLevel !== null ? `Niveau ${row.compliance.achievableLevel}` : 'Onbekend',
     Status: row.statusLabel,
+    Fase: row.phase,
+    'Motivering niveau': row.app.levelReason,
     Impact: row.impactLabel,
     'Kritieke infrastructuur': row.app.criticalInfra ? 'Ja' : 'Nee',
+    'AI-verwerking': row.app.aiProcessing ? 'Ja' : 'Nee',
     'Type data': row.app.dataTypes
       .map((key) => meta.dataTypes.find((d) => d.key === key)?.label ?? key)
       .join('; '),
@@ -33,8 +36,11 @@ export function exportExcel(report: ReportResponse, meta: Meta) {
     { wch: 30 },
     { wch: 14 },
     { wch: 10 },
+    { wch: 24 },
+    { wch: 50 },
     { wch: 10 },
     { wch: 12 },
+    { wch: 14 },
     { wch: 45 },
     { wch: 45 },
     { wch: 80 },

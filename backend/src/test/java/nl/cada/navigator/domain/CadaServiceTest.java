@@ -2,86 +2,142 @@ package nl.cada.navigator.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import nl.cada.navigator.domain.CadaDomain.SupplierInfo;
 import nl.cada.navigator.domain.ComplianceResult.SupplierCheckResult;
 
 class CadaServiceTest {
 
     private final CadaService service = new CadaService();
 
+    /** Compacte catalogus met dezelfde kernleveranciers als de seed-data. */
+    private static final Map<String, SupplierInfo> CATALOG = new LinkedHashMap<>();
+
+    static {
+        CATALOG.put("AWS (Amazon)", new SupplierInfo(1, "US Cloud Act."));
+        CATALOG.put("Microsoft Azure", new SupplierInfo(1, "US Cloud Act en FISA 702."));
+        CATALOG.put("IBM Cloud", new SupplierInfo(2, "Deels Europese entiteit."));
+        CATALOG.put("KPN Cloud / Intermax", new SupplierInfo(3, "Nederlands eigendom."));
+        CATALOG.put("OVHcloud", new SupplierInfo(3, "Frans eigendom."));
+        CATALOG.put("SURF", new SupplierInfo(4, "Niveau 4-kandidaat."));
+    }
+
     private static ApplicationInput input(List<String> dataTypes, List<String> regulations,
             String impact, boolean criticalInfra) {
-        return new ApplicationInput(dataTypes, regulations, impact, criticalInfra);
+        return new ApplicationInput(dataTypes, regulations, impact, criticalInfra, false);
+    }
+
+    private static ApplicationInput aiInput(List<String> dataTypes, List<String> regulations,
+            String impact) {
+        return new ApplicationInput(dataTypes, regulations, impact, false, true);
     }
 
     @Nested
     class BerekenNiveau {
 
         @Test
-        void staatsgeheimenGevenNiveau4() {
-            int level = service.berekenNiveau(
+        void staatsgeheimenGevenNiveau4MetReden() {
+            NiveauBesluit besluit = service.berekenNiveau(
                     input(List.of("staatsgeheimen"), List.of("geen"), "minimaal", false));
-            assertThat(level).isEqualTo(4);
+            assertThat(besluit.level()).isEqualTo(4);
+            assertThat(besluit.reden()).contains("staatsgeheimen");
         }
 
         @Test
         void kritiekeInfraMetKritiekeImpactGeeftNiveau4() {
-            int level = service.berekenNiveau(
+            NiveauBesluit besluit = service.berekenNiveau(
                     input(List.of("operationeel"), List.of("geen"), "kritiek", true));
-            assertThat(level).isEqualTo(4);
+            assertThat(besluit.level()).isEqualTo(4);
+            assertThat(besluit.reden()).contains("kritieke infrastructuur");
         }
 
         @Test
         void kritiekeInfraMetErnstigeImpactGeeftGeenNiveau4() {
-            int level = service.berekenNiveau(
-                    input(List.of("operationeel"), List.of("geen"), "ernstig", true));
-            assertThat(level).isEqualTo(1);
+            assertThat(service.berekenNiveau(
+                    input(List.of("operationeel"), List.of("geen"), "ernstig", true)).level())
+                    .isEqualTo(1);
         }
 
         @Test
         void vertrouwelijkeOverheidsinformatieGeeftNiveau3() {
-            int level = service.berekenNiveau(
+            NiveauBesluit besluit = service.berekenNiveau(
                     input(List.of("vertrouwelijk_overheid"), List.of("geen"), "minimaal", false));
-            assertThat(level).isEqualTo(3);
+            assertThat(besluit.level()).isEqualTo(3);
+            assertThat(besluit.reden()).contains("vertrouwelijke overheidsinformatie");
         }
 
         @Test
         void bijzonderePersoonsgegevensMetErnstigeImpactGevenNiveau3() {
-            int level = service.berekenNiveau(
-                    input(List.of("bijzondere_persoonsgegevens"), List.of("avg"), "ernstig", false));
-            assertThat(level).isEqualTo(3);
+            assertThat(service.berekenNiveau(
+                    input(List.of("bijzondere_persoonsgegevens"), List.of("avg"), "ernstig", false)).level())
+                    .isEqualTo(3);
         }
 
         @Test
         void bijzonderePersoonsgegevensMetBeperkteImpactGevenNiveau1() {
-            int level = service.berekenNiveau(
-                    input(List.of("bijzondere_persoonsgegevens"), List.of("avg"), "beperkt", false));
-            assertThat(level).isEqualTo(1);
+            assertThat(service.berekenNiveau(
+                    input(List.of("bijzondere_persoonsgegevens"), List.of("avg"), "beperkt", false)).level())
+                    .isEqualTo(1);
         }
 
         @Test
         void persoonsgegevensOnderBioMetErnstigeImpactGevenNiveau2() {
-            int level = service.berekenNiveau(
-                    input(List.of("persoonsgegevens"), List.of("bio"), "ernstig", false));
-            assertThat(level).isEqualTo(2);
+            assertThat(service.berekenNiveau(
+                    input(List.of("persoonsgegevens"), List.of("bio"), "ernstig", false)).level())
+                    .isEqualTo(2);
         }
 
         @Test
         void persoonsgegevensOnderAvgAlleenGevenNiveau1() {
-            int level = service.berekenNiveau(
-                    input(List.of("persoonsgegevens"), List.of("avg"), "ernstig", false));
-            assertThat(level).isEqualTo(1);
+            assertThat(service.berekenNiveau(
+                    input(List.of("persoonsgegevens"), List.of("avg"), "ernstig", false)).level())
+                    .isEqualTo(1);
         }
 
         @Test
-        void operationeleDataGeeftNiveau1() {
-            int level = service.berekenNiveau(
+        void operationeleDataGeeftNiveau1MetBasisReden() {
+            NiveauBesluit besluit = service.berekenNiveau(
                     input(List.of("operationeel"), List.of("geen"), "minimaal", false));
-            assertThat(level).isEqualTo(1);
+            assertThat(besluit.level()).isEqualTo(1);
+            assertThat(besluit.reden()).contains("basisniveau");
+        }
+
+        @Test
+        void aiVerwerkingVanBijzonderePersoonsgegevensGeeftNiveau3OokBijLageImpact() {
+            NiveauBesluit besluit = service.berekenNiveau(
+                    aiInput(List.of("bijzondere_persoonsgegevens"), List.of("avg"), "beperkt"));
+            assertThat(besluit.level()).isEqualTo(3);
+            assertThat(besluit.reden()).contains("AI-verwerking");
+        }
+
+        @Test
+        void aiVerwerkingVanPersoonsgegevensGeeftMinimaalNiveau2() {
+            NiveauBesluit besluit = service.berekenNiveau(
+                    aiInput(List.of("persoonsgegevens"), List.of("avg"), "minimaal"));
+            assertThat(besluit.level()).isEqualTo(2);
+            assertThat(besluit.reden()).contains("AI-verwerking");
+        }
+
+        @Test
+        void aiVerwerkingZonderPersoonsgegevensBlijftNiveau1() {
+            assertThat(service.berekenNiveau(
+                    aiInput(List.of("operationeel"), List.of("geen"), "minimaal")).level())
+                    .isEqualTo(1);
+        }
+
+        @Test
+        void zwaardereRegelGaatVoorAiRegel() {
+            // Staatsgeheimen winnen van de AI-regel.
+            NiveauBesluit besluit = service.berekenNiveau(new ApplicationInput(
+                    List.of("staatsgeheimen", "persoonsgegevens"), List.of("geen"), "minimaal", false, true));
+            assertThat(besluit.level()).isEqualTo(4);
+            assertThat(besluit.reden()).contains("staatsgeheimen");
         }
     }
 
@@ -91,7 +147,7 @@ class CadaServiceTest {
         @Test
         void zwaksteLeverancierBepaaltHaalbaarNiveau() {
             ComplianceResult result = service.checkCompliance(
-                    List.of("Microsoft Azure", "SURF"), 3);
+                    List.of("Microsoft Azure", "SURF"), 3, CATALOG);
 
             assertThat(result.achievableLevel()).isEqualTo(1);
             assertThat(result.status()).isEqualTo("gap");
@@ -100,7 +156,7 @@ class CadaServiceTest {
 
         @Test
         void compliantLeveranciersGevenStatusOk() {
-            ComplianceResult result = service.checkCompliance(List.of("OVHcloud"), 3);
+            ComplianceResult result = service.checkCompliance(List.of("OVHcloud"), 3, CATALOG);
 
             assertThat(result.status()).isEqualTo("ok");
             assertThat(result.gap()).isZero();
@@ -109,7 +165,7 @@ class CadaServiceTest {
 
         @Test
         void alleenOnbekendeLeveranciersGevenStatusUnknown() {
-            ComplianceResult result = service.checkCompliance(List.of("Anders"), 2);
+            ComplianceResult result = service.checkCompliance(List.of("Anders"), 2, CATALOG);
 
             assertThat(result.status()).isEqualTo("unknown");
             assertThat(result.achievableLevel()).isNull();
@@ -118,7 +174,7 @@ class CadaServiceTest {
 
         @Test
         void bekendeCompliantPlusOnbekendeLeverancierGeeftUnknown() {
-            ComplianceResult result = service.checkCompliance(List.of("SURF", "Anders"), 3);
+            ComplianceResult result = service.checkCompliance(List.of("SURF", "Anders"), 3, CATALOG);
 
             assertThat(result.status()).isEqualTo("unknown");
             assertThat(result.achievableLevel()).isEqualTo(4);
@@ -126,7 +182,7 @@ class CadaServiceTest {
 
         @Test
         void gapMetOnbekendeLeverancierBlijftGap() {
-            ComplianceResult result = service.checkCompliance(List.of("AWS (Amazon)", "Anders"), 2);
+            ComplianceResult result = service.checkCompliance(List.of("AWS (Amazon)", "Anders"), 2, CATALOG);
 
             assertThat(result.status()).isEqualTo("gap");
             assertThat(result.gap()).isEqualTo(1);
@@ -138,13 +194,13 @@ class CadaServiceTest {
 
         @Test
         void alleenSurfHaaltNiveau4() {
-            assertThat(service.suppliersForLevel(4)).containsExactly("SURF");
+            assertThat(service.suppliersForLevel(4, CATALOG)).containsExactly("SURF");
         }
 
         @Test
         void niveau1WordtDoorAlleLeveranciersGehaald() {
-            assertThat(service.suppliersForLevel(1))
-                    .containsExactlyInAnyOrderElementsOf(CadaDomain.KNOWN_SUPPLIERS);
+            assertThat(service.suppliersForLevel(1, CATALOG))
+                    .containsExactlyInAnyOrderElementsOf(CATALOG.keySet());
         }
     }
 
@@ -153,8 +209,8 @@ class CadaServiceTest {
 
         @Test
         void okStatusAdviseertVastleggingInRisicodossier() {
-            ComplianceResult compliance = service.checkCompliance(List.of("OVHcloud"), 3);
-            List<String> adviezen = service.buildRecommendation("Zaaksysteem", 3, compliance);
+            ComplianceResult compliance = service.checkCompliance(List.of("OVHcloud"), 3, CATALOG);
+            List<String> adviezen = service.buildRecommendation("Zaaksysteem", 3, compliance, CATALOG);
 
             assertThat(adviezen).hasSize(1);
             assertThat(adviezen.getFirst()).contains("risicodossier").contains("Zaaksysteem");
@@ -162,8 +218,8 @@ class CadaServiceTest {
 
         @Test
         void okOpNiveau4AdviseertCertificeringscheck() {
-            ComplianceResult compliance = service.checkCompliance(List.of("SURF"), 4);
-            List<String> adviezen = service.buildRecommendation("Stg-archief", 4, compliance);
+            ComplianceResult compliance = service.checkCompliance(List.of("SURF"), 4, CATALOG);
+            List<String> adviezen = service.buildRecommendation("Stg-archief", 4, compliance, CATALOG);
 
             assertThat(adviezen).hasSize(2);
             assertThat(adviezen.get(1)).contains("EU Sovereign-certificering");
@@ -171,8 +227,8 @@ class CadaServiceTest {
 
         @Test
         void gapAdviseertMigratieMetKandidaten() {
-            ComplianceResult compliance = service.checkCompliance(List.of("Microsoft Azure"), 3);
-            List<String> adviezen = service.buildRecommendation("DMS", 3, compliance);
+            ComplianceResult compliance = service.checkCompliance(List.of("Microsoft Azure"), 3, CATALOG);
+            List<String> adviezen = service.buildRecommendation("DMS", 3, compliance, CATALOG);
 
             assertThat(adviezen.getFirst())
                     .contains("Microsoft Azure")
@@ -183,16 +239,16 @@ class CadaServiceTest {
 
         @Test
         void gapVanEenNiveauNaarNiveau2NoemtContractstructuur() {
-            ComplianceResult compliance = service.checkCompliance(List.of("AWS (Amazon)"), 2);
-            List<String> adviezen = service.buildRecommendation("E-maildienst", 2, compliance);
+            ComplianceResult compliance = service.checkCompliance(List.of("AWS (Amazon)"), 2, CATALOG);
+            List<String> adviezen = service.buildRecommendation("E-maildienst", 2, compliance, CATALOG);
 
             assertThat(adviezen).anySatisfy(a -> assertThat(a).contains("contractstructuur"));
         }
 
         @Test
         void unknownStatusAdviseertHandmatigeToets() {
-            ComplianceResult compliance = service.checkCompliance(List.of("Anders"), 2);
-            List<String> adviezen = service.buildRecommendation("CRM", 2, compliance);
+            ComplianceResult compliance = service.checkCompliance(List.of("Anders"), 2, CATALOG);
+            List<String> adviezen = service.buildRecommendation("CRM", 2, compliance, CATALOG);
 
             assertThat(adviezen).hasSize(1);
             assertThat(adviezen.getFirst()).contains("handmatig");

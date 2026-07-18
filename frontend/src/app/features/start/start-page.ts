@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { CadaApi } from '../../core/cada-api';
 import { MetaStore } from '../../core/meta-store';
@@ -18,7 +18,7 @@ interface ResumeInfo {
 @Component({
   selector: 'app-start-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Ladder],
+  imports: [FormsModule, Ladder, RouterLink],
   template: `
     <div class="flex min-h-screen flex-1 flex-col lg:flex-row">
       <!-- Linkerpaneel: het instrument en de ladder -->
@@ -148,6 +148,20 @@ interface ResumeInfo {
           <p class="mt-4 px-1 text-xs leading-relaxed text-ink-muted">
             Dit instrument is indicatief. Raadpleeg altijd een juridisch adviseur voor een
             bindende interpretatie van de CADA.
+          </p>
+          <p class="mt-3 flex gap-4 px-1 text-xs">
+            <a
+              routerLink="/dossiers"
+              class="font-semibold text-kobalt underline-offset-4 hover:underline"
+            >
+              Alle dossiers →
+            </a>
+            <a
+              routerLink="/beheer/leveranciers"
+              class="font-semibold text-kobalt underline-offset-4 hover:underline"
+            >
+              Leveranciersreferentiedata →
+            </a>
           </p>
         </div>
       </section>

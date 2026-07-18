@@ -53,6 +53,36 @@ public class AssessmentController {
         return AssessmentResponse.from(assessments.save(assessment));
     }
 
+    public record AssessmentSummary(
+            String id,
+            String orgName,
+            java.time.Instant createdAt,
+            int applicationCount,
+            int gapCount,
+            int maxRecommendedLevel) {
+    }
+
+    /** Portfolio-overzicht voor het dashboard: alle dossiers met gap-statistiek. */
+    @GetMapping
+    @Transactional(readOnly = true)
+    public java.util.List<AssessmentSummary> list() {
+        return assessments.findAll().stream()
+                .sorted(java.util.Comparator.comparing(AssessmentEntity::getCreatedAt).reversed())
+                .map(assessment -> {
+                    var report = reportService.buildReport(assessment);
+                    int gaps = (int) report.rows().stream()
+                            .filter(r -> "GAP".equals(r.statusLabel()))
+                            .count();
+                    int maxLevel = report.rows().stream()
+                            .mapToInt(r -> r.app().recommendedLevel())
+                            .max()
+                            .orElse(0);
+                    return new AssessmentSummary(assessment.getId(), assessment.getOrgName(),
+                            assessment.getCreatedAt(), report.rows().size(), gaps, maxLevel);
+                })
+                .toList();
+    }
+
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public AssessmentResponse get(@PathVariable String id) {
@@ -98,9 +128,11 @@ public class AssessmentController {
         app.setRegulations(data.regulations());
         app.setImpactLevel(data.impactLevel());
         app.setCriticalInfra(data.criticalInfra());
+        app.setAiProcessing(data.aiProcessing());
         app.setSuppliers(data.suppliers());
         app.setSupplierOther(data.supplierOther());
         app.setRecommendedLevel(data.recommendedLevel());
+        app.setLevelReason(data.levelReason());
     }
 
     private AssessmentEntity find(String id) {

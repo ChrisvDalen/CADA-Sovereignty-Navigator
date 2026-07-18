@@ -3,6 +3,7 @@ package nl.cada.navigator.domain;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,47 +12,70 @@ import org.springframework.stereotype.Service;
 import nl.cada.navigator.domain.CadaDomain.SupplierInfo;
 import nl.cada.navigator.domain.ComplianceResult.SupplierCheckResult;
 
-/** Beslisboom, leverancierstoets en aanbevelingen — de kern van de navigator. */
+/**
+ * Beslisboom, leverancierstoets en aanbevelingen — de kern van de navigator.
+ * De leveranciersreferentiedata komt uit de database en wordt als catalogus
+ * (naam → {@link SupplierInfo}) meegegeven, zodat deze logica puur blijft.
+ */
 @Service
 public class CadaService {
 
     /**
-     * Deterministische beslisboom voor het aanbevolen CADA-niveau.
+     * Deterministische beslisboom voor het aanbevolen CADA-niveau. Elke
+     * uitkomst draagt de regel die hem bepaalde, zodat de niveaubepaling
+     * uitlegbaar en auditeerbaar is.
      *
-     * 1. Staatsgeheimen, of kritieke infrastructuur met kritieke impact  → niveau 4
-     * 2. Vertrouwelijke overheidsinformatie, of bijzondere persoons-
-     *    gegevens met ernstige/kritieke impact                           → niveau 3
-     * 3. Persoonsgegevens onder BIO/NIS2/BIR met ernstige/kritieke impact → niveau 2
-     * 4. Alle overige gevallen                                            → niveau 1
+     * 1. Staatsgeheimen                                                  → niveau 4
+     * 2. Kritieke infrastructuur met kritieke impact                     → niveau 4
+     * 3. Vertrouwelijke overheidsinformatie                              → niveau 3
+     * 4. Bijzondere persoonsgegevens met ernstige/kritieke impact        → niveau 3
+     * 5. AI-verwerking van bijzondere persoonsgegevens                   → niveau 3
+     * 6. Persoonsgegevens onder BIO/NIS2/BIR met ernstige/kritieke impact → niveau 2
+     * 7. AI-verwerking van persoonsgegevens                              → niveau 2
+     * 8. Alle overige gevallen                                            → niveau 1
      */
-    public int berekenNiveau(ApplicationInput input) {
+    public NiveauBesluit berekenNiveau(ApplicationInput input) {
         Set<String> data = new HashSet<>(input.dataTypes());
         Set<String> regs = new HashSet<>(input.regulations());
         boolean zwareImpact = "ernstig".equals(input.impactLevel()) || "kritiek".equals(input.impactLevel());
 
-        if (data.contains("staatsgeheimen")
-                || (input.criticalInfra() && "kritiek".equals(input.impactLevel()))) {
-            return 4;
+        if (data.contains("staatsgeheimen")) {
+            return new NiveauBesluit(4, "De toepassing verwerkt staatsgeheimen.");
+        }
+        if (input.criticalInfra() && "kritiek".equals(input.impactLevel())) {
+            return new NiveauBesluit(4,
+                    "De toepassing is onderdeel van kritieke infrastructuur en heeft kritieke impact bij uitval.");
         }
 
-        if (data.contains("vertrouwelijk_overheid")
-                || (data.contains("bijzondere_persoonsgegevens") && zwareImpact)) {
-            return 3;
+        if (data.contains("vertrouwelijk_overheid")) {
+            return new NiveauBesluit(3, "De toepassing verwerkt vertrouwelijke overheidsinformatie.");
+        }
+        if (data.contains("bijzondere_persoonsgegevens") && zwareImpact) {
+            return new NiveauBesluit(3,
+                    "De toepassing verwerkt bijzondere persoonsgegevens met ernstige of kritieke impact.");
+        }
+        if (input.aiProcessing() && data.contains("bijzondere_persoonsgegevens")) {
+            return new NiveauBesluit(3, "De toepassing past AI-verwerking toe op bijzondere persoonsgegevens.");
         }
 
         if (data.contains("persoonsgegevens")
                 && (regs.contains("bio") || regs.contains("nis2") || regs.contains("bir"))
                 && zwareImpact) {
-            return 2;
+            return new NiveauBesluit(2,
+                    "De toepassing verwerkt persoonsgegevens onder BIO, NIS2 of BIR met ernstige of kritieke impact.");
+        }
+        if (input.aiProcessing() && data.contains("persoonsgegevens")) {
+            return new NiveauBesluit(2, "De toepassing past AI-verwerking toe op persoonsgegevens.");
         }
 
-        return 1;
+        return new NiveauBesluit(1, "Geen verzwarende factoren; het basisniveau (datalocatie in de EU) volstaat.");
     }
 
-    public ComplianceResult checkCompliance(List<String> suppliers, int recommendedLevel) {
+    public ComplianceResult checkCompliance(List<String> suppliers, int recommendedLevel,
+            Map<String, SupplierInfo> catalog) {
         List<SupplierCheckResult> results = suppliers.stream()
                 .map(name -> {
-                    SupplierInfo info = CadaDomain.SUPPLIER_DATA.get(name);
+                    SupplierInfo info = catalog.get(name);
                     if (info == null) {
                         return new SupplierCheckResult(name, false, null, "", null);
                     }
@@ -76,14 +100,16 @@ public class CadaService {
         return new ComplianceResult(results, weakest, status, gap);
     }
 
-    /** Leveranciers uit de dataset die minimaal het gevraagde niveau halen. */
-    public List<String> suppliersForLevel(int level) {
-        return CadaDomain.KNOWN_SUPPLIERS.stream()
-                .filter(name -> CadaDomain.SUPPLIER_DATA.get(name).maxLevel() >= level)
+    /** Leveranciers uit de catalogus die minimaal het gevraagde niveau halen. */
+    public List<String> suppliersForLevel(int level, Map<String, SupplierInfo> catalog) {
+        return catalog.entrySet().stream()
+                .filter(e -> e.getValue().maxLevel() >= level)
+                .map(Map.Entry::getKey)
                 .toList();
     }
 
-    public List<String> buildRecommendation(String appName, int recommendedLevel, ComplianceResult compliance) {
+    public List<String> buildRecommendation(String appName, int recommendedLevel, ComplianceResult compliance,
+            Map<String, SupplierInfo> catalog) {
         List<String> adviezen = new ArrayList<>();
 
         if ("ok".equals(compliance.status())) {
@@ -104,7 +130,7 @@ public class CadaService {
             return adviezen;
         }
 
-        List<String> kandidaten = suppliersForLevel(recommendedLevel);
+        List<String> kandidaten = suppliersForLevel(recommendedLevel, catalog);
         String nietCompliant = compliance.suppliers().stream()
                 .filter(s -> Boolean.FALSE.equals(s.compliant()))
                 .map(SupplierCheckResult::name)

@@ -18,17 +18,29 @@ overheidsinstanties:
 ## Modules
 
 1. **Toepassingsprofiler** — vragenlijst per cloudtoepassing (datatype,
-   regelgeving, impact, kritieke infrastructuur, leveranciers); een
-   deterministische beslisboom berekent server-side het aanbevolen CADA-niveau,
-   met een live niveau-indicatie tijdens het invullen.
-2. **Leverancierstoets** — toetst de geselecteerde leveranciers tegen een
-   referentiedataset met het maximaal haalbare niveau per aanbieder.
+   regelgeving, impact, kritieke infrastructuur, AI-verwerking, leveranciers);
+   een deterministische beslisboom berekent server-side het aanbevolen
+   CADA-niveau, met een live niveau-indicatie tijdens het invullen. Elke
+   niveaubepaling is **uitlegbaar**: de regel die het niveau bepaalde wordt
+   getoond in het formulier, het rapport en de exports.
+2. **Leverancierstoets** — toetst de geselecteerde leveranciers tegen de
+   referentiedataset (18 aanbieders) met het maximaal haalbare niveau,
+   jurisdictie, eigendomsstructuur en certificeringen per aanbieder.
 3. **Gap-rapport & roadmap** — samenvattingstabel, prioriteitenmatrix
-   (hoogste impact + grootste gap bovenaan) en concrete aanbevelingen.
-4. **Export** — professioneel PDF-rapport (voorpagina, inhoudsopgave,
-   niveau-uitleg, aanbevelingen, disclaimer) en Excel-export (één rij per
-   toepassing). Beide worden client-side gegenereerd op basis van het door de
-   server berekende rapport.
+   (hoogste impact + grootste gap bovenaan), concrete aanbevelingen en een
+   **roadmap per fase** (korte termijn / middellang / meerjarig / handmatig
+   toetsen / borgen), afgeleid van de gap en het doelniveau.
+4. **Export** — professioneel PDF-rapport, Excel-export (één rij per
+   toepassing) en een bewerkbaar Word-document. Alle drie worden client-side
+   gegenereerd op basis van het door de server berekende rapport.
+
+Daarnaast:
+
+- **Dossieroverzicht** (`/dossiers`) — portfolio-dashboard met alle analyses,
+  het aantal toepassingen en de gevonden compliance-gaps.
+- **Leveranciersbeheer** (`/beheer/leveranciers`) — de referentiedataset staat
+  in de database en is te beheren zonder redeploy; wijzigingen werken direct
+  door in de leverancierstoets van alle dossiers.
 
 Sessies worden opgeslagen in een lokale H2-database; het sessie-ID staat in
 `localStorage`, zodat een analyse later hervat kan worden.
@@ -54,14 +66,17 @@ frontend/   Angular 21 (standalone components, signals) + Tailwind CSS 4
 | Methode | Pad | Doel |
 | --- | --- | --- |
 | POST | `/api/assessments` | Dossier openen (`{ orgName }`) |
+| GET | `/api/assessments` | Portfolio-overzicht met gap-statistiek per dossier |
 | GET | `/api/assessments/{id}` | Dossier + toepassingen ophalen |
 | PATCH | `/api/assessments/{id}` | Organisatienaam wijzigen |
-| GET | `/api/assessments/{id}/report` | Gap-rapport (compliance, aanbevelingen, prioriteit) |
-| POST | `/api/assessments/{id}/applications` | Toepassing profileren (niveau server-side berekend) |
+| GET | `/api/assessments/{id}/report` | Gap-rapport (compliance, aanbevelingen, prioriteit, fase) |
+| POST | `/api/assessments/{id}/applications` | Toepassing profileren (niveau + motivering server-side) |
 | PUT | `/api/applications/{id}` | Toepassing bijwerken |
 | DELETE | `/api/applications/{id}` | Toepassing verwijderen |
 | GET | `/api/meta` | Referentiedata (vragen, leveranciers, niveaus) |
-| POST | `/api/level-preview` | Live niveau-indicatie tijdens het invullen |
+| POST | `/api/level-preview` | Live niveau-indicatie met motivering |
+| GET/POST | `/api/suppliers` | Leveranciersreferentiedata lezen / toevoegen |
+| PUT/DELETE | `/api/suppliers/{id}` | Leverancier bijwerken / verwijderen |
 
 ## Ontwikkelen
 

@@ -107,15 +107,42 @@ import { WizardShell } from '../../shared/wizard-shell';
                           }}
                         </span>
                       </span>
+                      <span
+                        class="rounded border border-line bg-porselein px-2 py-0.5 font-mono text-[11px] text-ink-muted"
+                      >
+                        {{ row.phase }}
+                      </span>
                       <app-status-chip [status]="row.statusLabel" />
                     </li>
                   }
                 </ol>
               </section>
 
-              <!-- 3. Aanbevelingen -->
+              <!-- 3. Roadmap per fase -->
               <section>
-                <h2 class="eyebrow mb-3">3 · Aanbevelingen per toepassing</h2>
+                <h2 class="eyebrow mb-3">3 · Roadmap per fase</h2>
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  @for (group of phaseGroups(); track group.phase) {
+                    <div class="rounded-lg border border-line bg-wit p-4">
+                      <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-kobalt">
+                        {{ group.phase }}
+                      </p>
+                      <ul class="mt-2 space-y-1.5">
+                        @for (row of group.rows; track row.app.id) {
+                          <li class="flex items-center justify-between gap-3 text-sm">
+                            <span class="font-medium text-ink">{{ row.app.name }}</span>
+                            <app-level-badge [level]="row.app.recommendedLevel" size="sm" />
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              </section>
+
+              <!-- 4. Aanbevelingen -->
+              <section>
+                <h2 class="eyebrow mb-3">4 · Aanbevelingen per toepassing</h2>
                 <div class="space-y-4">
                   @for (row of prioritized(); track row.app.id) {
                     <article class="overflow-hidden rounded-lg border border-line bg-wit">
@@ -134,6 +161,12 @@ import { WizardShell } from '../../shared/wizard-shell';
                           <app-status-chip [status]="row.statusLabel" />
                         </div>
                       </div>
+                      @if (row.app.levelReason) {
+                        <p class="border-b border-line bg-porselein/60 px-5 py-2 text-[13px] text-ink-muted">
+                          <span class="font-semibold text-ink">Motivering niveau:</span>
+                          {{ row.app.levelReason }}
+                        </p>
+                      }
                       <ul class="space-y-2 px-5 py-4">
                         @for (advies of row.recommendations; track $index) {
                           <li class="flex gap-3 text-sm leading-relaxed">
@@ -149,7 +182,7 @@ import { WizardShell } from '../../shared/wizard-shell';
                 </div>
               </section>
 
-              <!-- 4. Sopra Steria call-to-action -->
+              <!-- 5. Sopra Steria call-to-action -->
               <section class="on-dark rounded-lg bg-nacht px-6 py-8 text-white sm:px-8">
                 <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt-200">
                   Vervolgstap
@@ -201,6 +234,21 @@ export class RapportPage {
   protected readonly prioritized = computed<ReportRow[]>(() => {
     const rows = this.report()?.rows ?? [];
     return [...rows].sort((a, b) => a.rank - b.rank);
+  });
+
+  /** Roadmapgroepen in uitvoeringsvolgorde; lege fasen worden verborgen. */
+  protected readonly phaseGroups = computed(() => {
+    const order = [
+      'Korte termijn (< 1 jaar)',
+      'Middellang (1–2 jaar)',
+      'Meerjarig (2+ jaar)',
+      'Handmatig toetsen',
+      'Borgen',
+    ];
+    const rows = this.prioritized();
+    return order
+      .map((phase) => ({ phase, rows: rows.filter((r) => r.phase === phase) }))
+      .filter((group) => group.rows.length > 0);
   });
 
   protected readonly summaryIntro = computed(() => {

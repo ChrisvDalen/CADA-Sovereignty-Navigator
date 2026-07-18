@@ -6,8 +6,12 @@ import {
   ApplicationDto,
   ApplicationPayload,
   AssessmentDto,
+  AssessmentSummary,
+  LevelPreview,
   Meta,
   ReportResponse,
+  SupplierDetail,
+  SupplierPayload,
 } from './models';
 
 /** REST-client voor de Spring Boot-backend. */
@@ -45,10 +49,30 @@ export class CadaApi {
     return firstValueFrom(this.http.delete<void>(`/api/applications/${id}`)).then(() => undefined);
   }
 
-  previewLevel(payload: Omit<ApplicationPayload, 'name' | 'supplierOther' | 'suppliers'>): Promise<number> {
-    return firstValueFrom(
-      this.http.post<{ level: number }>('/api/level-preview', payload),
-    ).then((r) => r.level);
+  previewLevel(
+    payload: Omit<ApplicationPayload, 'name' | 'supplierOther' | 'suppliers'>,
+  ): Promise<LevelPreview> {
+    return firstValueFrom(this.http.post<LevelPreview>('/api/level-preview', payload));
+  }
+
+  listAssessments(): Promise<AssessmentSummary[]> {
+    return firstValueFrom(this.http.get<AssessmentSummary[]>('/api/assessments'));
+  }
+
+  listSuppliers(): Promise<SupplierDetail[]> {
+    return firstValueFrom(this.http.get<SupplierDetail[]>('/api/suppliers'));
+  }
+
+  createSupplier(payload: SupplierPayload): Promise<SupplierDetail> {
+    return firstValueFrom(this.http.post<SupplierDetail>('/api/suppliers', payload));
+  }
+
+  updateSupplier(id: string, payload: SupplierPayload): Promise<SupplierDetail> {
+    return firstValueFrom(this.http.put<SupplierDetail>(`/api/suppliers/${id}`, payload));
+  }
+
+  deleteSupplier(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/suppliers/${id}`)).then(() => undefined);
   }
 
   /** Haalt de Nederlandstalige foutmelding uit een backend-antwoord. */

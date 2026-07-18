@@ -7,6 +7,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/start/start-page').then((m) => m.StartPage),
   },
   {
+    path: 'dossiers',
+    loadComponent: () => import('./features/dossiers/dossiers-page').then((m) => m.DossiersPage),
+  },
+  {
+    path: 'beheer/leveranciers',
+    loadComponent: () =>
+      import('./features/beheer/leveranciers-beheer-page').then((m) => m.LeveranciersBeheerPage),
+  },
+  {
     path: 'assessment/:id/toepassingen',
     loadComponent: () =>
       import('./features/toepassingen/toepassingen-page').then((m) => m.ToepassingenPage),

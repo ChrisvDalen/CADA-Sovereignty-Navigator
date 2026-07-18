@@ -7,5 +7,6 @@ public record ApplicationInput(
         List<String> dataTypes,
         List<String> regulations,
         String impactLevel,
-        boolean criticalInfra) {
+        boolean criticalInfra,
+        boolean aiProcessing) {
 }

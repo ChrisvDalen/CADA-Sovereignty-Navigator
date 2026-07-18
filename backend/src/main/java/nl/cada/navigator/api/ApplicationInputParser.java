@@ -10,6 +10,8 @@ import nl.cada.navigator.api.dto.ApplicationPayload;
 import nl.cada.navigator.domain.ApplicationInput;
 import nl.cada.navigator.domain.CadaDomain;
 import nl.cada.navigator.domain.CadaService;
+import nl.cada.navigator.domain.NiveauBesluit;
+import nl.cada.navigator.domain.SupplierCatalogService;
 
 /**
  * Valideert de payload van het toepassingsformulier en berekent het
@@ -18,29 +20,25 @@ import nl.cada.navigator.domain.CadaService;
 @Component
 public class ApplicationInputParser {
 
-    private static final Set<String> VALID_SUPPLIERS;
-
-    static {
-        Set<String> suppliers = new HashSet<>(CadaDomain.KNOWN_SUPPLIERS);
-        suppliers.add(CadaDomain.OTHER_SUPPLIER);
-        VALID_SUPPLIERS = Set.copyOf(suppliers);
-    }
-
     public record ParsedApplication(
             String name,
             List<String> dataTypes,
             List<String> regulations,
             String impactLevel,
             boolean criticalInfra,
+            boolean aiProcessing,
             List<String> suppliers,
             String supplierOther,
-            int recommendedLevel) {
+            int recommendedLevel,
+            String levelReason) {
     }
 
     private final CadaService cadaService;
+    private final SupplierCatalogService supplierCatalog;
 
-    public ApplicationInputParser(CadaService cadaService) {
+    public ApplicationInputParser(CadaService cadaService, SupplierCatalogService supplierCatalog) {
         this.cadaService = cadaService;
+        this.supplierCatalog = supplierCatalog;
     }
 
     public ParsedApplication parse(ApplicationPayload payload) {
@@ -70,8 +68,11 @@ public class ApplicationInputParser {
         }
 
         boolean criticalInfra = Boolean.TRUE.equals(payload.criticalInfra());
+        boolean aiProcessing = Boolean.TRUE.equals(payload.aiProcessing());
 
-        List<String> suppliers = filterValid(payload.suppliers(), VALID_SUPPLIERS);
+        Set<String> validSuppliers = new HashSet<>(supplierCatalog.catalog().keySet());
+        validSuppliers.add(CadaDomain.OTHER_SUPPLIER);
+        List<String> suppliers = filterValid(payload.suppliers(), validSuppliers);
         if (suppliers.isEmpty()) {
             throw new ValidationException("Selecteer minimaal één cloudleverancier.");
         }
@@ -82,11 +83,11 @@ public class ApplicationInputParser {
             throw new ValidationException("Vul de naam van de andere leverancier in.");
         }
 
-        int recommendedLevel = cadaService.berekenNiveau(
-                new ApplicationInput(dataTypes, regulations, impactLevel, criticalInfra));
+        NiveauBesluit besluit = cadaService.berekenNiveau(
+                new ApplicationInput(dataTypes, regulations, impactLevel, criticalInfra, aiProcessing));
 
-        return new ParsedApplication(name, dataTypes, regulations, impactLevel, criticalInfra,
-                suppliers, hasOther ? supplierOther : "", recommendedLevel);
+        return new ParsedApplication(name, dataTypes, regulations, impactLevel, criticalInfra, aiProcessing,
+                suppliers, hasOther ? supplierOther : "", besluit.level(), besluit.reden());
     }
 
     private static List<String> filterValid(List<String> values, Set<String> valid) {

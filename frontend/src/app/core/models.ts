@@ -32,6 +32,17 @@ export interface LevelInfo {
   requirements: string[];
 }
 
+export interface SupplierDetail {
+  id: string;
+  name: string;
+  maxLevel: CadaLevel;
+  notes: string;
+  jurisdiction: string;
+  ownership: string;
+  certifications: string;
+  lastVerified: string | null;
+}
+
 export interface Meta {
   dataTypes: DataType[];
   regulations: Regulation[];
@@ -39,6 +50,7 @@ export interface Meta {
   knownSuppliers: string[];
   otherSupplier: string;
   supplierData: Record<string, SupplierInfo>;
+  supplierDetails: SupplierDetail[];
   levelInfo: Record<string, LevelInfo>;
 }
 
@@ -49,9 +61,11 @@ export interface ApplicationDto {
   regulations: string[];
   impactLevel: string;
   criticalInfra: boolean;
+  aiProcessing: boolean;
   suppliers: string[];
   supplierOther: string;
   recommendedLevel: CadaLevel;
+  levelReason: string;
 }
 
 export interface AssessmentDto {
@@ -67,8 +81,33 @@ export interface ApplicationPayload {
   regulations: string[];
   impactLevel: string | null;
   criticalInfra: boolean;
+  aiProcessing: boolean;
   suppliers: string[];
   supplierOther: string;
+}
+
+export interface LevelPreview {
+  level: CadaLevel;
+  reden: string;
+}
+
+export interface AssessmentSummary {
+  id: string;
+  orgName: string;
+  createdAt: string;
+  applicationCount: number;
+  gapCount: number;
+  maxRecommendedLevel: number;
+}
+
+export interface SupplierPayload {
+  name: string;
+  maxLevel: number;
+  notes: string;
+  jurisdiction: string;
+  ownership: string;
+  certifications: string;
+  lastVerified: string | null;
 }
 
 export interface SupplierCheckResult {
@@ -95,6 +134,7 @@ export interface ReportRow {
   supplierNames: string[];
   statusLabel: 'OK' | 'GAP' | 'ONBEKEND';
   rank: number;
+  phase: string;
 }
 
 export interface ReportResponse {

@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 
 import { CadaApi } from './cada-api';
-import { CadaLevel, LevelInfo, Meta } from './models';
+import { CadaLevel, LevelInfo, Meta, SupplierDetail } from './models';
 
 /** Laadt de referentiedata (vragenlijst-opties, leveranciers, niveaus) eenmalig. */
 @Injectable({ providedIn: 'root' })
@@ -34,6 +34,19 @@ export class MetaStore {
 
   impactLabel(key: string): string {
     return this._meta()?.impactLevels.find((i) => i.key === key)?.label ?? key;
+  }
+
+  supplierDetail(name: string): SupplierDetail | null {
+    return this._meta()?.supplierDetails.find((s) => s.name === name) ?? null;
+  }
+
+  /** Compacte herkomstregel: jurisdictie · eigendom · certificeringen. */
+  supplierFacts(name: string): string {
+    const detail = this.supplierDetail(name);
+    if (!detail) return '';
+    return [detail.jurisdiction, detail.ownership, detail.certifications]
+      .filter((part) => part.length > 0)
+      .join(' · ');
   }
 
   supplierDisplayNames(suppliers: string[], supplierOther: string): string[] {

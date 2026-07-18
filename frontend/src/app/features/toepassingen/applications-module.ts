@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 
 import { CadaApi } from '../../core/cada-api';
 import { MetaStore } from '../../core/meta-store';
-import { ApplicationDto, ApplicationPayload, CadaLevel, Meta } from '../../core/models';
+import { ApplicationDto, ApplicationPayload, LevelPreview, Meta } from '../../core/models';
 import { LevelBadge } from '../../shared/level-badge';
 
 interface FormState {
@@ -22,6 +22,7 @@ interface FormState {
   regulations: string[];
   impactLevel: string | null;
   criticalInfra: boolean | null;
+  aiProcessing: boolean | null;
   suppliers: string[];
   supplierOther: string;
 }
@@ -32,6 +33,7 @@ const EMPTY_FORM: FormState = {
   regulations: [],
   impactLevel: null,
   criticalInfra: null,
+  aiProcessing: null,
   suppliers: [],
   supplierOther: '',
 };
@@ -141,7 +143,7 @@ function toggle<T>(list: T[], value: T): T[] {
             <!-- 1. Naam -->
             <section>
               <label for="appName" class="block">
-                <span class="eyebrow">Vraag 1 van 6</span>
+                <span class="eyebrow">Vraag 1 van 7</span>
                 <span class="mt-1 block text-sm font-semibold text-ink">
                   Naam van de toepassing
                 </span>
@@ -159,7 +161,7 @@ function toggle<T>(list: T[], value: T): T[] {
 
             <!-- 2. Type data -->
             <section>
-              <p class="eyebrow">Vraag 2 van 6</p>
+              <p class="eyebrow">Vraag 2 van 7</p>
               <p class="mt-1 text-sm font-semibold text-ink">
                 Welk type data verwerkt deze toepassing?
               </p>
@@ -190,7 +192,7 @@ function toggle<T>(list: T[], value: T): T[] {
 
             <!-- 3. Regelgeving -->
             <section>
-              <p class="eyebrow">Vraag 3 van 6</p>
+              <p class="eyebrow">Vraag 3 van 7</p>
               <p class="mt-1 text-sm font-semibold text-ink">
                 Welke wet- en regelgeving is van toepassing?
               </p>
@@ -218,7 +220,7 @@ function toggle<T>(list: T[], value: T): T[] {
 
             <!-- 4. Impact -->
             <section>
-              <p class="eyebrow">Vraag 4 van 6</p>
+              <p class="eyebrow">Vraag 4 van 7</p>
               <p class="mt-1 text-sm font-semibold text-ink">
                 Wat is de impact bij een datalek of uitval?
               </p>
@@ -251,7 +253,7 @@ function toggle<T>(list: T[], value: T): T[] {
 
             <!-- 5. Kritieke infrastructuur -->
             <section>
-              <p class="eyebrow">Vraag 5 van 6</p>
+              <p class="eyebrow">Vraag 5 van 7</p>
               <p class="mt-1 text-sm font-semibold text-ink">
                 Is de toepassing onderdeel van kritieke infrastructuur?
               </p>
@@ -277,9 +279,41 @@ function toggle<T>(list: T[], value: T): T[] {
               </div>
             </section>
 
-            <!-- 6. Leveranciers -->
+            <!-- 6. AI-verwerking -->
             <section>
-              <p class="eyebrow">Vraag 6 van 6</p>
+              <p class="eyebrow">Vraag 6 van 7</p>
+              <p class="mt-1 text-sm font-semibold text-ink">
+                Past de toepassing AI-verwerking toe (bijv. machine learning, profilering of
+                generatieve AI)?
+              </p>
+              <p class="text-xs text-ink-muted">
+                De CADA stelt aanvullende eisen aan AI-verwerking van persoonsgegevens.
+              </p>
+              <div class="mt-3 flex gap-2">
+                @for (opt of criticalInfraOptions; track opt.label) {
+                  @let checked = form().aiProcessing === opt.value;
+                  <label
+                    class="flex cursor-pointer items-center gap-2.5 rounded border px-5 py-2.5 transition-colors"
+                    [class]="
+                      checked ? 'border-kobalt bg-kobalt-50' : 'border-line hover:border-line-strong'
+                    "
+                  >
+                    <input
+                      type="radio"
+                      name="aiProcessing"
+                      [checked]="checked"
+                      (change)="patch({ aiProcessing: opt.value })"
+                      class="h-3.5 w-3.5 accent-kobalt"
+                    />
+                    <span class="text-sm font-medium text-ink">{{ opt.label }}</span>
+                  </label>
+                }
+              </div>
+            </section>
+
+            <!-- 7. Leveranciers -->
+            <section>
+              <p class="eyebrow">Vraag 7 van 7</p>
               <p class="mt-1 text-sm font-semibold text-ink">
                 Bij welke cloudleverancier(s) draait deze toepassing?
               </p>
@@ -323,9 +357,9 @@ function toggle<T>(list: T[], value: T): T[] {
           >
             <div class="flex items-center gap-3">
               @if (previewLevel(); as level) {
-                <app-level-badge [level]="level" [showName]="true" />
-                <span class="text-xs text-ink-muted">
-                  Voorlopige niveau-indicatie op basis van uw antwoorden.
+                <app-level-badge [level]="level.level" [showName]="true" />
+                <span class="max-w-md text-xs text-ink-muted">
+                  {{ level.reden }}
                 </span>
               } @else {
                 <span class="text-xs text-ink-muted">
@@ -378,7 +412,7 @@ export class ApplicationsModule {
   protected readonly form = signal<FormState>(EMPTY_FORM);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly previewLevel = signal<CadaLevel | null>(null);
+  protected readonly previewLevel = signal<LevelPreview | null>(null);
 
   protected readonly formOpen = computed(() => this.editingId() !== null);
   protected readonly supplierOptions = computed(() => [
@@ -421,6 +455,7 @@ export class ApplicationsModule {
       regulations: app.regulations,
       impactLevel: app.impactLevel,
       criticalInfra: app.criticalInfra,
+      aiProcessing: app.aiProcessing,
       suppliers: app.suppliers,
       supplierOther: app.supplierOther,
     });
@@ -447,6 +482,7 @@ export class ApplicationsModule {
       regulations: form.regulations,
       impactLevel: form.impactLevel,
       criticalInfra: form.criticalInfra === true,
+      aiProcessing: form.aiProcessing === true,
       suppliers: form.suppliers,
       supplierOther: form.supplierOther,
     };
@@ -495,14 +531,15 @@ export class ApplicationsModule {
 
     this.previewTimer = setTimeout(async () => {
       try {
-        const level = await this.api.previewLevel({
+        const preview = await this.api.previewLevel({
           dataTypes: form.dataTypes,
           regulations: form.regulations,
           impactLevel: form.impactLevel,
           criticalInfra: form.criticalInfra === true,
+          aiProcessing: form.aiProcessing === true,
         });
         if (version === this.previewVersion) {
-          this.previewLevel.set(level as CadaLevel);
+          this.previewLevel.set(preview);
         }
       } catch {
         if (version === this.previewVersion) {
