@@ -48,9 +48,11 @@ Sessies worden opgeslagen in een lokale H2-database; het sessie-ID staat in
 ## Architectuur
 
 ```
-backend/    Spring Boot 3 (Java 21) REST API + H2-persistentie
-frontend/   Angular 21 (standalone components, signals) + Tailwind CSS 4
+backend/    Spring Boot 3 (Java 25) REST API + H2-persistentie
+frontend/   Angular 22 (standalone components, signals) + Tailwind CSS 4
 ```
+
+Vereisten: JDK 25, Maven 3.9+, Node.js ≥ 24.15 (vereist door de Angular 22 CLI).
 
 - **Backend** is de bron van waarheid voor alle domeinlogica: de beslisboom,
   de leverancierstoets, de aanbevelingen en de prioritering
@@ -100,7 +102,8 @@ Open vervolgens http://localhost:4200.
 Tests en productiebuilds:
 
 ```bash
-cd backend && mvn verify        # unit- en API-tests
+cd backend && mvn verify        # 43 unit- en API-tests (JUnit)
+cd frontend && npm test         # 19 unit-tests (Vitest)
 cd frontend && npm run build    # productiebundel in dist/
 ```
 

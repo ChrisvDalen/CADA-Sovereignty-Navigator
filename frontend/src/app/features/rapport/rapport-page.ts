@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { CadaApi } from '../../core/cada-api';
 import { MetaStore } from '../../core/meta-store';
 import { ReportResponse, ReportRow } from '../../core/models';
+import { groupByPhase, prioritized } from '../../core/report-utils';
 import { LevelBadge } from '../../shared/level-badge';
 import { StatusChip } from '../../shared/status-chip';
 import { StepNav } from '../../shared/step-nav';
@@ -231,25 +232,12 @@ export class RapportPage {
   protected readonly report = signal<ReportResponse | null>(null);
   protected readonly notFound = signal(false);
 
-  protected readonly prioritized = computed<ReportRow[]>(() => {
-    const rows = this.report()?.rows ?? [];
-    return [...rows].sort((a, b) => a.rank - b.rank);
-  });
+  protected readonly prioritized = computed<ReportRow[]>(() =>
+    prioritized(this.report()?.rows ?? []),
+  );
 
   /** Roadmapgroepen in uitvoeringsvolgorde; lege fasen worden verborgen. */
-  protected readonly phaseGroups = computed(() => {
-    const order = [
-      'Korte termijn (< 1 jaar)',
-      'Middellang (1–2 jaar)',
-      'Meerjarig (2+ jaar)',
-      'Handmatig toetsen',
-      'Borgen',
-    ];
-    const rows = this.prioritized();
-    return order
-      .map((phase) => ({ phase, rows: rows.filter((r) => r.phase === phase) }))
-      .filter((group) => group.rows.length > 0);
-  });
+  protected readonly phaseGroups = computed(() => groupByPhase(this.report()?.rows ?? []));
 
   protected readonly summaryIntro = computed(() => {
     const rows = this.report()?.rows ?? [];
