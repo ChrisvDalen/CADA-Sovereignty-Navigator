@@ -15,6 +15,8 @@ import {
   ShareLinkDto,
   SharedReport,
   ShareStatus,
+  SnapshotDiff,
+  SnapshotSummary,
   SupplierDetail,
   SupplierPayload,
   UserDto,
@@ -130,6 +132,33 @@ export class CadaApi {
 
   getSharedReport(token: string): Promise<SharedReport> {
     return firstValueFrom(this.http.get<SharedReport>(`/api/share/${token}`));
+  }
+
+  // — Momentopnames (dossierversionering) —
+
+  listSnapshots(assessmentId: string): Promise<SnapshotSummary[]> {
+    return firstValueFrom(
+      this.http.get<SnapshotSummary[]>(`/api/assessments/${assessmentId}/snapshots`),
+    );
+  }
+
+  createSnapshot(assessmentId: string, label: string): Promise<SnapshotSummary> {
+    return firstValueFrom(
+      this.http.post<SnapshotSummary>(`/api/assessments/${assessmentId}/snapshots`, { label }),
+    );
+  }
+
+  deleteSnapshot(assessmentId: string, snapshotId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`/api/assessments/${assessmentId}/snapshots/${snapshotId}`),
+    ).then(() => undefined);
+  }
+
+  diffSnapshots(assessmentId: string, from: string, to = 'current'): Promise<SnapshotDiff> {
+    const params = new URLSearchParams({ from, to }).toString();
+    return firstValueFrom(
+      this.http.get<SnapshotDiff>(`/api/assessments/${assessmentId}/snapshots/diff?${params}`),
+    );
   }
 
   /** Haalt de Nederlandstalige foutmelding uit een backend-antwoord. */

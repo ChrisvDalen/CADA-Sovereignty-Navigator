@@ -155,6 +155,45 @@ export interface ImportResult {
   errors: ImportError[];
 }
 
+export interface SnapshotSummary {
+  id: string;
+  label: string;
+  createdAt: string;
+  applicationCount: number;
+  gapCount: number;
+}
+
+export interface CountChange {
+  from: number;
+  to: number;
+  delta: number;
+}
+
+export interface KeyedChange {
+  key: string;
+  from: number;
+  to: number;
+  delta: number;
+}
+
+export interface AppLevelChange {
+  name: string;
+  fromLevel: number;
+  toLevel: number;
+}
+
+export interface SnapshotDiff {
+  fromLabel: string;
+  toLabel: string;
+  applicationCount: CountChange;
+  gapCount: CountChange;
+  recommendedLevels: KeyedChange[];
+  supplierUsage: KeyedChange[];
+  addedApplications: string[];
+  removedApplications: string[];
+  levelChanges: AppLevelChange[];
+}
+
 export interface UserDto {
   email: string;
 }

@@ -8,11 +8,12 @@ import { LevelBadge } from '../../shared/level-badge';
 import { StatusChip } from '../../shared/status-chip';
 import { StepNav } from '../../shared/step-nav';
 import { WizardShell } from '../../shared/wizard-shell';
+import { SnapshotsPanel } from './snapshots-panel';
 
 @Component({
   selector: 'app-rapport-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [WizardShell, StepNav, LevelBadge, StatusChip],
+  imports: [WizardShell, StepNav, LevelBadge, StatusChip, SnapshotsPanel],
   template: `
     @if (report(); as report) {
       @if (metaStore.meta()) {
@@ -183,9 +184,15 @@ import { WizardShell } from '../../shared/wizard-shell';
                 </div>
               </section>
 
-              <!-- 5. Alleen-lezen deellink -->
+              <!-- 5. Momentopnames & voortgang -->
               <section>
-                <h2 class="eyebrow mb-3">5 · Delen met bestuur</h2>
+                <h2 class="eyebrow mb-3">5 · Voortgang (momentopnames)</h2>
+                <app-snapshots-panel [assessmentId]="report.assessment.id" />
+              </section>
+
+              <!-- 6. Alleen-lezen deellink -->
+              <section>
+                <h2 class="eyebrow mb-3">6 · Delen met bestuur</h2>
                 <div class="rounded-lg border border-line bg-wit p-5">
                   <p class="max-w-2xl text-sm leading-relaxed text-ink-muted">
                     Maak een alleen-lezen link aan waarmee bijvoorbeeld het bestuur dit rapport
@@ -249,7 +256,7 @@ import { WizardShell } from '../../shared/wizard-shell';
                 </div>
               </section>
 
-              <!-- 6. Sopra Steria call-to-action -->
+              <!-- 7. Sopra Steria call-to-action -->
               <section class="on-dark rounded-lg bg-nacht px-6 py-8 text-white sm:px-8">
                 <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt-200">
                   Vervolgstap
