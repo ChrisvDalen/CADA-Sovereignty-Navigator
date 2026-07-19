@@ -31,3 +31,14 @@ test('aanmelden via magic-link en een dossier starten', async ({ page }) => {
   await expect(page).toHaveURL(/\/assessment\/.+\/toepassingen/);
   await expect(page.getByText('Dossier · Gemeente Smoke')).toBeVisible();
 });
+
+test('de taalwissel toont de Engelse interface', async ({ page }) => {
+  await page.goto('/login');
+  // Standaard Nederlands
+  await expect(page.getByRole('button', { name: 'Stuur aanmeldlink' })).toBeVisible();
+
+  // Wisselen naar Engels
+  await page.getByRole('button', { name: /Switch to English/ }).click();
+  await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
+  await expect(page.getByText('Access your dossiers')).toBeVisible();
+});

@@ -4,9 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 
 import { AuthStore } from '../../core/auth-store';
 import { CadaApi } from '../../core/cada-api';
+import { LocaleStore } from '../../core/i18n';
 import { MetaStore } from '../../core/meta-store';
 import { CadaLevel } from '../../core/models';
+import { DeadlineBanner } from '../../shared/deadline-banner';
 import { Ladder } from '../../shared/ladder';
+import { LanguageToggle } from '../../shared/language-toggle';
 
 const STORAGE_KEY = 'cada-assessment-id';
 
@@ -19,7 +22,7 @@ interface ResumeInfo {
 @Component({
   selector: 'app-start-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Ladder, RouterLink],
+  imports: [FormsModule, Ladder, RouterLink, LanguageToggle, DeadlineBanner],
   template: `
     <div class="flex min-h-screen flex-1 flex-col lg:flex-row">
       <!-- Linkerpaneel: het instrument en de ladder -->
@@ -29,7 +32,7 @@ interface ResumeInfo {
         >
           <div>
             <p class="rise-in font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt-200">
-              Cloud and AI Development Act · augustus 2026
+              {{ t('start.eyebrow') }}
             </p>
             <div class="mt-8 flex items-end gap-6">
               <app-ladder [level]="4" size="lg" [animate]="true" />
@@ -79,23 +82,26 @@ interface ResumeInfo {
       <!-- Rechterpaneel: dossier openen -->
       <section class="flex flex-1 items-center bg-porselein">
         <div class="mx-auto w-full max-w-md px-6 py-12 lg:px-10">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <app-deadline-banner />
+            <app-language-toggle variant="light" />
+          </div>
           <div
             class="rounded-lg border border-line bg-wit p-6 shadow-[0_1px_2px_rgba(11,21,65,0.06)] sm:p-8"
           >
-            <p class="eyebrow">Stap 1 van 4 · Voorbereiding</p>
+            <p class="eyebrow">{{ t('start.stepLabel') }}</p>
             <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              Open een dossier
+              {{ t('start.openDossier') }}
             </h2>
             <p class="mt-2 mb-6 text-sm text-ink-muted">
-              Vul de naam van uw organisatie in. Uw voortgang wordt automatisch bewaard, zodat u
-              de analyse later kunt hervatten.
+              {{ t('start.orgIntro') }}
             </p>
 
             <div class="space-y-6">
               <form class="space-y-4" (submit)="start($event)">
                 <div>
                   <label for="orgName" class="mb-1.5 block text-sm font-semibold text-ink">
-                    Naam van uw organisatie
+                    {{ t('start.orgLabel') }}
                   </label>
                   <input
                     id="orgName"
@@ -103,7 +109,7 @@ interface ResumeInfo {
                     [ngModel]="orgName()"
                     (ngModelChange)="orgName.set($event)"
                     name="orgName"
-                    placeholder="Bijv. Gemeente Utrecht"
+                    [placeholder]="t('start.orgPlaceholder')"
                     autocomplete="organization"
                     class="w-full rounded border border-line-strong bg-wit px-3 py-2.5 text-sm transition-colors placeholder:text-ink-faint focus:border-kobalt"
                   />
@@ -118,13 +124,13 @@ interface ResumeInfo {
                   [disabled]="!orgName().trim() || busy()"
                   class="w-full rounded border border-kobalt bg-kobalt px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep disabled:cursor-not-allowed disabled:border-line disabled:bg-porselein disabled:text-ink-faint"
                 >
-                  {{ busy() ? 'Bezig met starten…' : 'Start de risicoanalyse' }}
+                  {{ busy() ? t('start.submitBusy') : t('start.submit') }}
                 </button>
               </form>
 
               @if (resume(); as info) {
                 <div class="rounded border border-line bg-porselein px-4 py-3">
-                  <p class="eyebrow mb-1">Eerdere sessie gevonden</p>
+                  <p class="eyebrow mb-1">{{ t('start.resumeFound') }}</p>
                   <p class="text-sm text-ink">
                     <span class="font-semibold">{{ info.orgName }}</span>
                     —
@@ -140,40 +146,39 @@ interface ResumeInfo {
                     (click)="resumeSession(info.id)"
                     class="mt-2 text-sm font-semibold text-kobalt underline underline-offset-4 hover:text-kobalt-diep"
                   >
-                    Sessie hervatten →
+                    {{ t('start.resume') }}
                   </button>
                 </div>
               }
             </div>
           </div>
           <p class="mt-4 px-1 text-xs leading-relaxed text-ink-muted">
-            Dit instrument is indicatief. Raadpleeg altijd een juridisch adviseur voor een
-            bindende interpretatie van de CADA.
+            {{ t('start.disclaimer') }}
           </p>
           <p class="mt-3 flex gap-4 px-1 text-xs">
             <a
               routerLink="/dossiers"
               class="font-semibold text-kobalt underline-offset-4 hover:underline"
             >
-              Alle dossiers →
+              {{ t('start.allDossiers') }}
             </a>
             <a
               routerLink="/beheer/leveranciers"
               class="font-semibold text-kobalt underline-offset-4 hover:underline"
             >
-              Leveranciersreferentiedata →
+              {{ t('start.referenceData') }}
             </a>
           </p>
           @if (authStore.user(); as user) {
             <p class="mt-3 px-1 text-xs text-ink-muted">
-              Aangemeld als <span class="font-semibold text-ink">{{ user.email }}</span>
+              {{ t('start.signedInAs') }} <span class="font-semibold text-ink">{{ user.email }}</span>
               ·
               <button
                 type="button"
                 (click)="logout()"
                 class="font-semibold text-kobalt underline-offset-4 hover:underline"
               >
-                Afmelden
+                {{ t('common.signOut') }}
               </button>
             </p>
           }
@@ -187,6 +192,11 @@ export class StartPage {
   private readonly router = inject(Router);
   protected readonly metaStore = inject(MetaStore);
   protected readonly authStore = inject(AuthStore);
+  private readonly locale = inject(LocaleStore);
+
+  protected t(key: string): string {
+    return this.locale.t(key);
+  }
 
   protected readonly levels: CadaLevel[] = [1, 2, 3, 4];
   protected readonly orgName = signal('');

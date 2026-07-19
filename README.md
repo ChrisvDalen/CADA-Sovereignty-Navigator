@@ -49,6 +49,18 @@ Daarnaast:
 - **Delen met bestuur** (`/delen/{token}`) — per dossier is vanaf het rapport
   één alleen-lezen deellink aan te maken (en in te trekken) waarmee het
   gap-rapport zonder aanmelding te bekijken is.
+- **Register-import** — op de toepassingenstap leest een import een Excel-/CSV-
+  export van het applicatieregister in en vult de vragenlijst voor (met
+  kolomherkenning, preview en foutrapportage).
+- **Momentopnames** — leg per dossier de stand vast (bijv. per kwartaal) en
+  vergelijk latere metingen via een diff-weergave.
+- **Dossierbeheer** — hernoemen, archiveren/herstellen en verwijderen vanuit
+  het dossieroverzicht, met een niveauverdeling-grafiek over de portfolio en
+  een teller richting de CADA-deadline (augustus 2026).
+- **Taal** — de toegangs- en beheerschermen (start, aanmelden, dossieroverzicht)
+  zijn met een taalwissel in het Nederlands of Engels te tonen. De inhoud van de
+  wizardstappen zelf is (nog) Nederlandstalig; de i18n-infrastructuur
+  (`core/i18n.ts`) is voorbereid om die vertaling uit te breiden.
 
 Dossiers worden opgeslagen in een lokale H2-database; het dossier-ID staat in
 `localStorage`, zodat een analyse later hervat kan worden. Sessies leven in
@@ -131,8 +143,8 @@ Open vervolgens http://localhost:4200.
 Tests en productiebuilds:
 
 ```bash
-cd backend && mvn verify        # 50 unit- en API-tests (JUnit)
-cd frontend && npm test         # 23 unit-tests (Vitest)
+cd backend && mvn verify        # 55 unit- en API-tests (JUnit)
+cd frontend && npm test         # 37 unit-tests (Vitest)
 cd frontend && npm run build    # productiebundel in dist/
 ```
 

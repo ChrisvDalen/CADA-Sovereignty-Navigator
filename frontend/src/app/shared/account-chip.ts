@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthStore } from '../core/auth-store';
+import { LocaleStore } from '../core/i18n';
 
 /** Toont de aangemelde gebruiker met een afmeldknop (voor donkere headers). */
 @Component({
@@ -16,7 +17,7 @@ import { AuthStore } from '../core/auth-store';
           (click)="logout()"
           class="rounded border border-white/25 px-2 py-1 font-sans font-semibold text-white transition-colors hover:border-white/60"
         >
-          Afmelden
+          {{ locale.t('common.signOut') }}
         </button>
       </span>
     }
@@ -24,6 +25,7 @@ import { AuthStore } from '../core/auth-store';
 })
 export class AccountChip {
   protected readonly store = inject(AuthStore);
+  protected readonly locale = inject(LocaleStore);
   private readonly router = inject(Router);
 
   constructor() {

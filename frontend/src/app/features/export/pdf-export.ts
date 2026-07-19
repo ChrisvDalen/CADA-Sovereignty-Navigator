@@ -7,6 +7,15 @@ const NAVY: [number, number, number] = [0, 48, 135];
 const INK: [number, number, number] = [27, 30, 36];
 const MUTED: [number, number, number] = [91, 96, 105];
 const LINE: [number, number, number] = [200, 198, 184];
+const PORCELAIN: [number, number, number] = [239, 242, 247];
+
+/** Kleur per niveau: oplopend donkerder, net als de soevereiniteitsladder. */
+const LEVEL_FILL: Record<CadaLevel, [number, number, number]> = {
+  1: [185, 198, 242],
+  2: [37, 68, 201],
+  3: [22, 39, 127],
+  4: [11, 21, 65],
+};
 
 const PAGE_W = 210;
 const PAGE_H = 297;
@@ -89,6 +98,40 @@ class PdfWriter {
 
   space(mm: number) {
     this.y += mm;
+  }
+
+  /** Horizontale staafgrafiek van de niveauverdeling (niveau 1 t/m 4). */
+  levelChart(counts: Record<CadaLevel, number>, levelName: (level: CadaLevel) => string) {
+    const levels: CadaLevel[] = [1, 2, 3, 4];
+    const max = Math.max(1, ...levels.map((l) => counts[l] ?? 0));
+    const labelW = 42;
+    const valueW = 10;
+    const barMaxW = CONTENT_W - labelW - valueW;
+    const rowH = 7;
+
+    this.ensureSpace(rowH * levels.length + 4);
+    for (const level of levels) {
+      const count = counts[level] ?? 0;
+      const barW = (count / max) * barMaxW;
+
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(9);
+      this.doc.setTextColor(...INK);
+      this.doc.text(`N${level} ${levelName(level)}`, MARGIN, this.y + 3.5);
+
+      // Achtergrondspoor + gevulde balk.
+      this.doc.setFillColor(...PORCELAIN);
+      this.doc.rect(MARGIN + labelW, this.y, barMaxW, 4.5, 'F');
+      if (barW > 0) {
+        this.doc.setFillColor(...LEVEL_FILL[level]);
+        this.doc.rect(MARGIN + labelW, this.y, barW, 4.5, 'F');
+      }
+
+      this.doc.setTextColor(...MUTED);
+      this.doc.text(String(count), MARGIN + labelW + barMaxW + 3, this.y + 3.5);
+      this.y += rowH;
+    }
+    this.y += 3;
   }
 }
 
@@ -202,6 +245,15 @@ export function exportPdf(report: ReportResponse, meta: Meta) {
     },
   });
   writer.y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+  // Niveauverdeling van de aanbevolen niveaus, als staafgrafiek.
+  const levelCounts = { 1: 0, 2: 0, 3: 0, 4: 0 } as Record<CadaLevel, number>;
+  rows.forEach((row) => (levelCounts[row.app.recommendedLevel] += 1));
+  if (rows.length > 0) {
+    writer.heading('Niveauverdeling (aanbevolen niveaus)', 12);
+    writer.levelChart(levelCounts, (level) => levelInfo(level).name);
+    writer.space(4);
+  }
 
   /* ── 2. Uitleg per niveau ───────────────────────────────────── */
   doc.addPage();

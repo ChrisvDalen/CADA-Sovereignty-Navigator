@@ -75,8 +75,21 @@ export class CadaApi {
     return firstValueFrom(this.http.post<LevelPreview>('/api/level-preview', payload));
   }
 
-  listAssessments(): Promise<AssessmentSummary[]> {
-    return firstValueFrom(this.http.get<AssessmentSummary[]>('/api/assessments'));
+  listAssessments(includeArchived = false): Promise<AssessmentSummary[]> {
+    const query = includeArchived ? '?includeArchived=true' : '';
+    return firstValueFrom(this.http.get<AssessmentSummary[]>(`/api/assessments${query}`));
+  }
+
+  renameAssessment(id: string, orgName: string): Promise<AssessmentDto> {
+    return firstValueFrom(this.http.patch<AssessmentDto>(`/api/assessments/${id}`, { orgName }));
+  }
+
+  setAssessmentArchived(id: string, archived: boolean): Promise<AssessmentDto> {
+    return firstValueFrom(this.http.patch<AssessmentDto>(`/api/assessments/${id}`, { archived }));
+  }
+
+  deleteAssessment(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/assessments/${id}`)).then(() => undefined);
   }
 
   listSuppliers(): Promise<SupplierDetail[]> {

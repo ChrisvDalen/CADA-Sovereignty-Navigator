@@ -149,6 +149,40 @@ class AssessmentApiTest {
     }
 
     @Test
+    void dossierHernoemenArchiverenEnVerwijderen() {
+        ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "Oude Naam"));
+        String id = created.getBody().get("id").asText();
+
+        // Hernoemen via PATCH
+        ResponseEntity<JsonNode> renamed = rest.exchange(
+                "/api/assessments/{id}", HttpMethod.PATCH,
+                TestAuth.entity(cookie, Map.of("orgName", "Nieuwe Naam")), JsonNode.class, id);
+        assertThat(renamed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(renamed.getBody().get("orgName").asText()).isEqualTo("Nieuwe Naam");
+
+        // Archiveren: verdwijnt uit het standaardoverzicht, zichtbaar met includeArchived
+        rest.exchange("/api/assessments/{id}", HttpMethod.PATCH,
+                TestAuth.entity(cookie, Map.of("archived", true)), JsonNode.class, id);
+        assertThat(idsIn(get("/api/assessments"))).doesNotContain(id);
+        assertThat(idsIn(get("/api/assessments?includeArchived=true"))).contains(id);
+
+        // De niveauverdeling zit in de samenvatting
+        assertThat(get("/api/assessments?includeArchived=true").getBody().get(0).has("levelCounts")).isTrue();
+
+        // Verwijderen
+        ResponseEntity<JsonNode> deleted = rest.exchange(
+                "/api/assessments/{id}", HttpMethod.DELETE, TestAuth.entity(cookie), JsonNode.class, id);
+        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get("/api/assessments/{id}", id).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    private java.util.List<String> idsIn(ResponseEntity<JsonNode> response) {
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        response.getBody().forEach(node -> ids.add(node.get("id").asText()));
+        return ids;
+    }
+
+    @Test
     void metaLevertReferentiedataUitDeDatabase() {
         ResponseEntity<JsonNode> response = rest.getForEntity("/api/meta", JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

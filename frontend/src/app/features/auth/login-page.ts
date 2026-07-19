@@ -2,19 +2,24 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 
 import { CadaApi } from '../../core/cada-api';
+import { LocaleStore } from '../../core/i18n';
 import { MagicLinkResult } from '../../core/models';
+import { LanguageToggle } from '../../shared/language-toggle';
 
 /** Aanmelden via magic-link: e-mailadres invullen, link ontvangen, klaar. */
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, LanguageToggle],
   template: `
     <div class="flex min-h-screen items-center justify-center bg-porselein px-6 py-12">
       <div class="w-full max-w-md">
+        <div class="mb-4 flex justify-end">
+          <app-language-toggle variant="light" />
+        </div>
         <div class="mb-8 text-center">
           <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt">
-            Cloud and AI Development Act · augustus 2026
+            {{ t('start.eyebrow') }}
           </p>
           <h1 class="mt-3 font-display text-3xl font-bold tracking-tight text-ink">
             CADA Sovereignty Navigator
@@ -25,14 +30,14 @@ import { MagicLinkResult } from '../../core/models';
           class="rounded-lg border border-line bg-wit p-6 shadow-[0_1px_2px_rgba(11,21,65,0.06)] sm:p-8"
         >
           @if (sent(); as result) {
-            <p class="eyebrow">Controleer uw inbox</p>
+            <p class="eyebrow">{{ t('login.sentEyebrow') }}</p>
             <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              Aanmeldlink verstuurd
+              {{ t('login.sentTitle') }}
             </h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-muted">
-              We hebben een aanmeldlink aangemaakt voor
+              {{ locale.t('login.sentTo') }}
               <span class="font-semibold text-ink">{{ result.email }}</span
-              >. De link is 15 minuten geldig en eenmalig te gebruiken.
+              >. {{ locale.t('login.sentValidity') }}
             </p>
             @if (result.loginUrl; as url) {
               <a
@@ -40,14 +45,14 @@ import { MagicLinkResult } from '../../core/models';
                 [href]="url"
                 class="mt-5 block w-full rounded border border-kobalt bg-kobalt px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep"
               >
-                Direct aanmelden
+                {{ t('login.directLogin') }}
               </a>
               <p class="mt-2 text-xs leading-relaxed text-ink-faint">
-                Ontwikkelmodus: zonder mailserver wordt de link hier direct getoond.
+                {{ locale.t('login.devHint') }}
               </p>
             } @else {
               <p class="mt-4 rounded border border-line bg-porselein px-3 py-2 text-xs leading-relaxed text-ink-muted">
-                Geen mail ontvangen? De beheerder vindt de link ook in het serverlog.
+                {{ locale.t('login.logHint') }}
               </p>
             }
             <button
@@ -55,21 +60,20 @@ import { MagicLinkResult } from '../../core/models';
               (click)="sent.set(null)"
               class="mt-4 text-sm font-semibold text-kobalt underline underline-offset-4 hover:text-kobalt-diep"
             >
-              Ander e-mailadres gebruiken
+              {{ t('login.otherEmail') }}
             </button>
           } @else {
-            <p class="eyebrow">Aanmelden</p>
+            <p class="eyebrow">{{ t('login.eyebrow') }}</p>
             <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              Toegang tot uw dossiers
+              {{ t('login.title') }}
             </h2>
             <p class="mt-2 mb-6 text-sm leading-relaxed text-ink-muted">
-              Vul uw e-mailadres in; u ontvangt een eenmalige aanmeldlink. Een wachtwoord is niet
-              nodig.
+              {{ t('login.intro') }}
             </p>
             <form class="space-y-4" (submit)="submit($event)">
               <div>
                 <label for="email" class="mb-1.5 block text-sm font-semibold text-ink">
-                  E-mailadres
+                  {{ t('login.emailLabel') }}
                 </label>
                 <input
                   id="email"
@@ -92,13 +96,13 @@ import { MagicLinkResult } from '../../core/models';
                 [disabled]="!email().trim() || busy()"
                 class="w-full rounded border border-kobalt bg-kobalt px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep disabled:cursor-not-allowed disabled:border-line disabled:bg-porselein disabled:text-ink-faint"
               >
-                {{ busy() ? 'Bezig…' : 'Stuur aanmeldlink' }}
+                {{ busy() ? t('login.submitBusy') : t('login.submit') }}
               </button>
             </form>
           }
         </div>
         <p class="mt-4 px-1 text-center text-xs leading-relaxed text-ink-muted">
-          Dossiers zijn persoonlijk: alleen de eigenaar kan ze inzien en bewerken.
+          {{ t('login.privacy') }}
         </p>
       </div>
     </div>
@@ -106,6 +110,11 @@ import { MagicLinkResult } from '../../core/models';
 })
 export class LoginPage {
   private readonly api = inject(CadaApi);
+  protected readonly locale = inject(LocaleStore);
+
+  protected t(key: string): string {
+    return this.locale.t(key);
+  }
 
   protected readonly email = signal('');
   protected readonly busy = signal(false);

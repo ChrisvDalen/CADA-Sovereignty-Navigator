@@ -98,6 +98,8 @@ export interface AssessmentSummary {
   applicationCount: number;
   gapCount: number;
   maxRecommendedLevel: number;
+  archived: boolean;
+  levelCounts: Record<string, number>;
 }
 
 export interface SupplierPayload {

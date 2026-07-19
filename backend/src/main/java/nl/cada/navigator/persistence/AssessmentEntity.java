@@ -34,6 +34,9 @@ public class AssessmentEntity {
 
     private Instant updatedAt = Instant.now();
 
+    /** Gearchiveerde dossiers blijven bewaard maar staan standaard niet in het overzicht. */
+    private boolean archived = false;
+
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
     private List<CloudApplicationEntity> applications = new ArrayList<>();
@@ -69,6 +72,14 @@ public class AssessmentEntity {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 
     public List<CloudApplicationEntity> getApplications() {
