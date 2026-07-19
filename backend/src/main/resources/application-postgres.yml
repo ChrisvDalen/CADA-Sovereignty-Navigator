@@ -1,0 +1,27 @@
+# Productiewaardig profiel: PostgreSQL in plaats van de lokale H2-file.
+# Activeren met SPRING_PROFILES_ACTIVE=postgres. Alle verbindingsgegevens
+# komen uit omgevingsvariabelen, zodat er geen secrets in de image staan.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/navigator}
+    username: ${DB_USERNAME:navigator}
+    password: ${DB_PASSWORD:navigator}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+cada:
+  cors:
+    # Bij een gescheiden frontend-host hier het publieke origin invullen.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
+  auth:
+    # In productie de aanmeldlink niet in het API-antwoord teruggeven.
+    expose-login-link: ${AUTH_EXPOSE_LOGIN_LINK:false}
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8080}
+    # Achter HTTPS op true zetten.
+    secure-cookies: ${AUTH_SECURE_COOKIES:false}

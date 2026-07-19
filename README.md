@@ -58,7 +58,7 @@ SHA-256-hash opgeslagen.
 ## Architectuur
 
 ```
-backend/    Spring Boot 3 (Java 25) REST API + H2-persistentie
+backend/    Spring Boot 3 (Java 25) REST API + H2 (lokaal) / PostgreSQL (prod)
 frontend/   Angular 22 (standalone components, signals) + Tailwind CSS 4
 ```
 
@@ -133,6 +133,32 @@ cd backend && mvn -DskipTests package   # jar bouwen die de test opstart
 cd frontend && npx playwright install chromium   # eenmalig
 cd frontend && npm run e2e
 ```
+
+## Deployment (Docker + PostgreSQL)
+
+Voor een productiewaardige opzet draait de stack op PostgreSQL in plaats van
+de lokale H2-file. `docker compose up --build` start drie containers —
+PostgreSQL, de backend (met het `postgres`-profiel) en de frontend achter
+nginx — en publiceert de app op http://localhost:8080. De frontend proxyt
+`/api` naar de backend, dus beide zijn voor de browser hetzelfde origin.
+
+```bash
+docker compose up --build      # start db + backend + frontend
+docker compose down            # stoppen (data blijft in het pg-data volume)
+```
+
+Belangrijke omgevingsvariabelen (zie `docker-compose.yml`):
+
+| Variabele | Doel |
+| --- | --- |
+| `DB_PASSWORD` | Wachtwoord van de PostgreSQL-gebruiker |
+| `PUBLIC_BASE_URL` | Publiek origin (voor de aanmeldlink en CORS) |
+| `AUTH_EXPOSE_LOGIN_LINK` | `false` zodra de aanmeldlink per mail wordt bezorgd |
+| `AUTH_SECURE_COOKIES` | `true` achter HTTPS (Secure-attribuut op het cookie) |
+
+Zonder Docker: activeer het profiel met `SPRING_PROFILES_ACTIVE=postgres` en
+zet `DB_URL`, `DB_USERNAME` en `DB_PASSWORD` in de omgeving. H2 blijft het
+standaardprofiel voor lokaal ontwikkelen en de tests.
 
 ## Continuous integration
 
