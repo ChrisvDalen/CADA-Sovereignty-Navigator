@@ -124,6 +124,53 @@ public class AssessmentController {
         return ApplicationResponse.from(applications.save(app));
     }
 
+    public record ImportPayload(java.util.List<ApplicationPayload> applications) {
+    }
+
+    public record ImportError(int row, String name, String error) {
+    }
+
+    public record ImportResult(int imported, int failed,
+            java.util.List<ApplicationResponse> applications,
+            java.util.List<ImportError> errors) {
+    }
+
+    /**
+     * Bulk-import vanuit een applicatieregister (Excel/CMDB). De frontend leest
+     * het bestand in en levert per rij een payload; ongeldige rijen worden
+     * overgeslagen en teruggemeld, zodat een enkele foute rij de rest niet
+     * blokkeert.
+     */
+    @PostMapping("/{id}/applications/import")
+    @Transactional
+    public ImportResult importApplications(@PathVariable String id,
+            @RequestBody(required = false) ImportPayload payload, UserEntity user) {
+        AssessmentEntity assessment = find(id, user);
+        java.util.List<ApplicationPayload> rows =
+                payload == null || payload.applications() == null ? java.util.List.of() : payload.applications();
+        if (rows.isEmpty()) {
+            throw new ValidationException("Het bestand bevat geen toepassingen om te importeren.");
+        }
+
+        java.util.List<ApplicationResponse> imported = new java.util.ArrayList<>();
+        java.util.List<ImportError> errors = new java.util.ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            ApplicationPayload row = rows.get(i);
+            try {
+                ParsedApplication data = parser.parse(row);
+                CloudApplicationEntity app = new CloudApplicationEntity();
+                app.setAssessment(assessment);
+                apply(app, data);
+                imported.add(ApplicationResponse.from(applications.save(app)));
+            } catch (ValidationException e) {
+                String name = row == null || row.name() == null ? "" : row.name();
+                // Rijnummer is 1-gebaseerd voor de gebruiker.
+                errors.add(new ImportError(i + 1, name, e.getMessage()));
+            }
+        }
+        return new ImportResult(imported.size(), errors.size(), imported, errors);
+    }
+
     static void apply(CloudApplicationEntity app, ParsedApplication data) {
         app.setName(data.name());
         app.setDataTypes(data.dataTypes());

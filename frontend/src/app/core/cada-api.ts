@@ -7,6 +7,7 @@ import {
   ApplicationPayload,
   AssessmentDto,
   AssessmentSummary,
+  ImportResult,
   LevelPreview,
   MagicLinkResult,
   Meta,
@@ -43,6 +44,17 @@ export class CadaApi {
   addApplication(assessmentId: string, payload: ApplicationPayload): Promise<ApplicationDto> {
     return firstValueFrom(
       this.http.post<ApplicationDto>(`/api/assessments/${assessmentId}/applications`, payload),
+    );
+  }
+
+  importApplications(
+    assessmentId: string,
+    applications: ApplicationPayload[],
+  ): Promise<ImportResult> {
+    return firstValueFrom(
+      this.http.post<ImportResult>(`/api/assessments/${assessmentId}/applications/import`, {
+        applications,
+      }),
     );
   }
 

@@ -6,11 +6,12 @@ import { ApplicationDto, AssessmentDto } from '../../core/models';
 import { StepNav } from '../../shared/step-nav';
 import { WizardShell } from '../../shared/wizard-shell';
 import { ApplicationsModule } from './applications-module';
+import { ImportPanel } from './import-panel';
 
 @Component({
   selector: 'app-toepassingen-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [WizardShell, StepNav, ApplicationsModule],
+  imports: [WizardShell, StepNav, ApplicationsModule, ImportPanel],
   template: `
     @if (assessment(); as assessment) {
       @if (metaStore.meta(); as meta) {
@@ -27,6 +28,14 @@ import { ApplicationsModule } from './applications-module';
               {{ assessment.orgName }} toe voordat u verdergaat.
             </p>
           </header>
+
+          <div class="mb-8">
+            <app-import-panel
+              [assessmentId]="assessment.id"
+              [meta]="meta"
+              (imported)="onImported()"
+            />
+          </div>
 
           <app-applications-module
             [assessmentId]="assessment.id"
@@ -78,5 +87,10 @@ export class ToepassingenPage {
     } catch {
       this.notFound.set(true);
     }
+  }
+
+  /** Na een import het dossier herladen, zodat de lijst de nieuwe rijen toont. */
+  protected onImported(): void {
+    this.load(this.id());
   }
 }

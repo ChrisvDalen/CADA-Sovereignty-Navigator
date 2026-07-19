@@ -92,6 +92,43 @@ class AssessmentApiTest {
     }
 
     @Test
+    void registerImportSlaatGeldigeRijenOpEnMeldtFouten() {
+        ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "Import Test"));
+        String id = created.getBody().get("id").asText();
+
+        Map<String, Object> geldig = Map.of(
+                "name", "Zaaksysteem",
+                "dataTypes", List.of("persoonsgegevens"),
+                "regulations", List.of("avg"),
+                "impactLevel", "ernstig",
+                "criticalInfra", false,
+                "suppliers", List.of("Microsoft Azure"));
+        Map<String, Object> ongeldig = Map.of(
+                "name", "",
+                "dataTypes", List.of("persoonsgegevens"),
+                "regulations", List.of("avg"),
+                "impactLevel", "ernstig",
+                "suppliers", List.of("Microsoft Azure"));
+
+        ResponseEntity<JsonNode> result = post(
+                "/api/assessments/{id}/applications/import",
+                Map.of("applications", List.of(geldig, ongeldig)),
+                id);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody().get("imported").asInt()).isEqualTo(1);
+        assertThat(result.getBody().get("failed").asInt()).isEqualTo(1);
+        assertThat(result.getBody().get("errors").get(0).get("row").asInt()).isEqualTo(2);
+        // Het niveau wordt server-side berekend, niet uit het bestand overgenomen.
+        assertThat(result.getBody().get("applications").get(0).get("recommendedLevel").asInt())
+                .isBetween(1, 4);
+
+        // De geïmporteerde toepassing staat in het dossier
+        ResponseEntity<JsonNode> assessment = get("/api/assessments/{id}", id);
+        assertThat(assessment.getBody().get("applications")).hasSize(1);
+    }
+
+    @Test
     void ongeldigePayloadGeeft400MetNederlandseMelding() {
         ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "Test"));
         String id = created.getBody().get("id").asText();

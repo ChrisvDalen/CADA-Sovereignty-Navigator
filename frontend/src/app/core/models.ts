@@ -142,6 +142,19 @@ export interface ReportResponse {
   rows: ReportRow[];
 }
 
+export interface ImportError {
+  row: number;
+  name: string;
+  error: string;
+}
+
+export interface ImportResult {
+  imported: number;
+  failed: number;
+  applications: ApplicationDto[];
+  errors: ImportError[];
+}
+
 export interface UserDto {
   email: string;
 }
