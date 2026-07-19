@@ -17,3 +17,12 @@ server:
 cada:
   cors:
     allowed-origins: http://localhost:4200
+  auth:
+    # Zonder mailserver wordt de magic-link ook in het serverlog geschreven.
+    # expose-login-link geeft de link daarnaast terug in het API-antwoord,
+    # zodat lokaal aanmelden zonder mailbox werkt. In productie: uitzetten
+    # en de link via een eigen kanaal (mail) bezorgen.
+    expose-login-link: true
+    frontend-base-url: http://localhost:4200
+    # In productie achter HTTPS op true zetten (Secure-attribuut op het cookie).
+    secure-cookies: false

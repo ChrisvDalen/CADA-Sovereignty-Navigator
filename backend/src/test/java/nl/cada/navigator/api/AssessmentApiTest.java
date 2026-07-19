@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +24,30 @@ class AssessmentApiTest {
     @Autowired
     private TestRestTemplate rest;
 
+    private String cookie;
+
+    @BeforeEach
+    void aanmelden() {
+        cookie = TestAuth.login(rest, "test@gemeente.nl");
+    }
+
+    private ResponseEntity<JsonNode> get(String url, Object... vars) {
+        return rest.exchange(url, HttpMethod.GET, TestAuth.entity(cookie), JsonNode.class, vars);
+    }
+
+    private ResponseEntity<JsonNode> post(String url, Object body, Object... vars) {
+        return rest.exchange(url, HttpMethod.POST, TestAuth.entity(cookie, body), JsonNode.class, vars);
+    }
+
     @Test
     void volledigeWizardFlow() {
         // Dossier openen
-        ResponseEntity<JsonNode> created = rest.postForEntity(
-                "/api/assessments", Map.of("orgName", "Gemeente Test"), JsonNode.class);
+        ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "Gemeente Test"));
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String id = created.getBody().get("id").asText();
 
         // Toepassing profileren — niveau wordt server-side berekend
-        ResponseEntity<JsonNode> app = rest.postForEntity(
+        ResponseEntity<JsonNode> app = post(
                 "/api/assessments/{id}/applications",
                 Map.of(
                         "name", "Zaaksysteem",
@@ -42,7 +56,7 @@ class AssessmentApiTest {
                         "impactLevel", "ernstig",
                         "criticalInfra", false,
                         "suppliers", List.of("Microsoft Azure")),
-                JsonNode.class, id);
+                id);
         assertThat(app.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(app.getBody().get("recommendedLevel").asInt()).isEqualTo(3);
 
@@ -50,8 +64,7 @@ class AssessmentApiTest {
         assertThat(app.getBody().get("levelReason").asText()).contains("bijzondere persoonsgegevens");
 
         // Rapport bevat compliance-status, aanbevelingen en roadmapfase
-        ResponseEntity<JsonNode> report = rest.getForEntity(
-                "/api/assessments/{id}/report", JsonNode.class, id);
+        ResponseEntity<JsonNode> report = get("/api/assessments/{id}/report", id);
         assertThat(report.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode row = report.getBody().get("rows").get(0);
         assertThat(row.get("statusLabel").asText()).isEqualTo("GAP");
@@ -60,7 +73,7 @@ class AssessmentApiTest {
         assertThat(row.get("phase").asText()).isEqualTo("Middellang (1–2 jaar)");
 
         // Dashboard-overzicht telt de gap mee
-        ResponseEntity<JsonNode> overview = rest.getForEntity("/api/assessments", JsonNode.class);
+        ResponseEntity<JsonNode> overview = get("/api/assessments");
         assertThat(overview.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode summary = null;
         for (JsonNode node : overview.getBody()) {
@@ -74,20 +87,19 @@ class AssessmentApiTest {
         // Toepassing verwijderen
         String appId = app.getBody().get("id").asText();
         ResponseEntity<JsonNode> deleted = rest.exchange(
-                "/api/applications/{id}", HttpMethod.DELETE, HttpEntity.EMPTY, JsonNode.class, appId);
+                "/api/applications/{id}", HttpMethod.DELETE, TestAuth.entity(cookie), JsonNode.class, appId);
         assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
     void ongeldigePayloadGeeft400MetNederlandseMelding() {
-        ResponseEntity<JsonNode> created = rest.postForEntity(
-                "/api/assessments", Map.of("orgName", "Test"), JsonNode.class);
+        ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "Test"));
         String id = created.getBody().get("id").asText();
 
-        ResponseEntity<JsonNode> response = rest.postForEntity(
+        ResponseEntity<JsonNode> response = post(
                 "/api/assessments/{id}/applications",
                 Map.of("name", "", "dataTypes", List.of(), "regulations", List.of()),
-                JsonNode.class, id);
+                id);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().get("error").asText()).isEqualTo("Geef de toepassing een naam.");
@@ -95,8 +107,7 @@ class AssessmentApiTest {
 
     @Test
     void onbekendeSessieGeeft404() {
-        ResponseEntity<JsonNode> response = rest.getForEntity(
-                "/api/assessments/{id}", JsonNode.class, "bestaat-niet");
+        ResponseEntity<JsonNode> response = get("/api/assessments/{id}", "bestaat-niet");
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
@@ -114,11 +125,10 @@ class AssessmentApiTest {
 
     @Test
     void aiVerwerkingVanPersoonsgegevensVerhoogtHetNiveau() {
-        ResponseEntity<JsonNode> created = rest.postForEntity(
-                "/api/assessments", Map.of("orgName", "AI Test"), JsonNode.class);
+        ResponseEntity<JsonNode> created = post("/api/assessments", Map.of("orgName", "AI Test"));
         String id = created.getBody().get("id").asText();
 
-        ResponseEntity<JsonNode> app = rest.postForEntity(
+        ResponseEntity<JsonNode> app = post(
                 "/api/assessments/{id}/applications",
                 Map.of(
                         "name", "Chatbot burgerloket",
@@ -128,7 +138,7 @@ class AssessmentApiTest {
                         "criticalInfra", false,
                         "aiProcessing", true,
                         "suppliers", List.of("OVHcloud")),
-                JsonNode.class, id);
+                id);
 
         assertThat(app.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(app.getBody().get("recommendedLevel").asInt()).isEqualTo(2);
@@ -137,7 +147,7 @@ class AssessmentApiTest {
 
     @Test
     void leveranciersZijnBeheerbaarViaDeApi() {
-        ResponseEntity<JsonNode> created = rest.postForEntity(
+        ResponseEntity<JsonNode> created = post(
                 "/api/suppliers",
                 Map.of(
                         "name", "Testcloud B.V.",
@@ -145,20 +155,18 @@ class AssessmentApiTest {
                         "jurisdiction", "Nederland",
                         "ownership", "Nederlands eigendom",
                         "certifications", "ISO 27001",
-                        "notes", "Testleverancier."),
-                JsonNode.class);
+                        "notes", "Testleverancier."));
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String supplierId = created.getBody().get("id").asText();
 
         // Dubbele naam wordt geweigerd
-        ResponseEntity<JsonNode> duplicate = rest.postForEntity(
-                "/api/suppliers", Map.of("name", "Testcloud B.V.", "maxLevel", 2), JsonNode.class);
+        ResponseEntity<JsonNode> duplicate = post(
+                "/api/suppliers", Map.of("name", "Testcloud B.V.", "maxLevel", 2));
         assertThat(duplicate.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
         // Nieuwe leverancier is direct bruikbaar in een toepassing
-        ResponseEntity<JsonNode> assessment = rest.postForEntity(
-                "/api/assessments", Map.of("orgName", "Beheer Test"), JsonNode.class);
-        ResponseEntity<JsonNode> app = rest.postForEntity(
+        ResponseEntity<JsonNode> assessment = post("/api/assessments", Map.of("orgName", "Beheer Test"));
+        ResponseEntity<JsonNode> app = post(
                 "/api/assessments/{id}/applications",
                 Map.of(
                         "name", "Website",
@@ -167,10 +175,10 @@ class AssessmentApiTest {
                         "impactLevel", "minimaal",
                         "criticalInfra", false,
                         "suppliers", List.of("Testcloud B.V.")),
-                JsonNode.class, assessment.getBody().get("id").asText());
+                assessment.getBody().get("id").asText());
         assertThat(app.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // Opruimen
-        rest.exchange("/api/suppliers/{id}", HttpMethod.DELETE, HttpEntity.EMPTY, JsonNode.class, supplierId);
+        rest.exchange("/api/suppliers/{id}", HttpMethod.DELETE, TestAuth.entity(cookie), JsonNode.class, supplierId);
     }
 }

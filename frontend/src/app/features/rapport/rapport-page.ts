@@ -183,7 +183,73 @@ import { WizardShell } from '../../shared/wizard-shell';
                 </div>
               </section>
 
-              <!-- 5. Sopra Steria call-to-action -->
+              <!-- 5. Alleen-lezen deellink -->
+              <section>
+                <h2 class="eyebrow mb-3">5 · Delen met bestuur</h2>
+                <div class="rounded-lg border border-line bg-wit p-5">
+                  <p class="max-w-2xl text-sm leading-relaxed text-ink-muted">
+                    Maak een alleen-lezen link aan waarmee bijvoorbeeld het bestuur dit rapport
+                    kan inzien zonder aan te melden. Er is per dossier één actieve link; een
+                    nieuwe link vervangt de vorige.
+                  </p>
+
+                  @if (shareError(); as message) {
+                    <p class="mt-3 rounded border border-alert/30 bg-alert-bg px-3 py-2 text-sm text-alert">
+                      {{ message }}
+                    </p>
+                  }
+
+                  @if (shareUrl(); as url) {
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
+                      <code
+                        data-testid="share-url"
+                        class="max-w-full overflow-x-auto rounded border border-line bg-porselein px-3 py-2 font-mono text-xs text-ink"
+                      >
+                        {{ url }}
+                      </code>
+                      <button
+                        type="button"
+                        (click)="copyShareUrl()"
+                        class="rounded border border-kobalt px-3 py-2 text-sm font-semibold text-kobalt transition-colors hover:bg-kobalt-50"
+                      >
+                        {{ copied() ? 'Gekopieerd ✓' : 'Kopieer link' }}
+                      </button>
+                    </div>
+                    <p class="mt-2 text-xs text-ink-faint">
+                      Bewaar de link nu: na het verlaten van deze pagina is hij niet opnieuw op
+                      te vragen (wel opnieuw aan te maken).
+                    </p>
+                  } @else if (shareActive()) {
+                    <p class="mt-4 text-sm text-ink">
+                      <span class="font-semibold">Er is een actieve deellink.</span>
+                      De link zelf wordt om veiligheidsredenen alleen getoond bij het aanmaken.
+                    </p>
+                  }
+
+                  <div class="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      (click)="createShareLink()"
+                      [disabled]="shareBusy()"
+                      class="rounded border border-kobalt bg-kobalt px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-kobalt-diep hover:bg-kobalt-diep disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {{ shareActive() ? 'Nieuwe link aanmaken' : 'Deellink aanmaken' }}
+                    </button>
+                    @if (shareActive()) {
+                      <button
+                        type="button"
+                        (click)="revokeShareLink()"
+                        [disabled]="shareBusy()"
+                        class="rounded border border-alert/50 px-4 py-2 text-sm font-semibold text-alert transition-colors hover:bg-alert-bg disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Link intrekken
+                      </button>
+                    }
+                  </div>
+                </div>
+              </section>
+
+              <!-- 6. Sopra Steria call-to-action -->
               <section class="on-dark rounded-lg bg-nacht px-6 py-8 text-white sm:px-8">
                 <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-kobalt-200">
                   Vervolgstap
@@ -255,6 +321,12 @@ export class RapportPage {
     return analysed + gapText;
   });
 
+  protected readonly shareActive = signal(false);
+  protected readonly shareUrl = signal<string | null>(null);
+  protected readonly shareBusy = signal(false);
+  protected readonly shareError = signal<string | null>(null);
+  protected readonly copied = signal(false);
+
   constructor() {
     this.metaStore.load();
     effect(() => {
@@ -266,8 +338,52 @@ export class RapportPage {
   private async load(id: string): Promise<void> {
     try {
       this.report.set(await this.api.getReport(id));
+      this.shareActive.set((await this.api.shareStatus(id)).active);
     } catch {
       this.notFound.set(true);
+    }
+  }
+
+  protected async createShareLink(): Promise<void> {
+    if (this.shareBusy()) return;
+    this.shareBusy.set(true);
+    this.shareError.set(null);
+    this.copied.set(false);
+    try {
+      const link = await this.api.createShareLink(this.id());
+      this.shareUrl.set(link.url);
+      this.shareActive.set(true);
+    } catch (err) {
+      this.shareError.set(CadaApi.errorMessage(err, 'De deellink kon niet worden aangemaakt.'));
+    } finally {
+      this.shareBusy.set(false);
+    }
+  }
+
+  protected async revokeShareLink(): Promise<void> {
+    if (this.shareBusy()) return;
+    this.shareBusy.set(true);
+    this.shareError.set(null);
+    try {
+      await this.api.revokeShareLink(this.id());
+      this.shareActive.set(false);
+      this.shareUrl.set(null);
+      this.copied.set(false);
+    } catch (err) {
+      this.shareError.set(CadaApi.errorMessage(err, 'De deellink kon niet worden ingetrokken.'));
+    } finally {
+      this.shareBusy.set(false);
+    }
+  }
+
+  protected async copyShareUrl(): Promise<void> {
+    const url = this.shareUrl();
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copied.set(true);
+    } catch {
+      this.shareError.set('Kopiëren lukte niet; selecteer de link handmatig.');
     }
   }
 }

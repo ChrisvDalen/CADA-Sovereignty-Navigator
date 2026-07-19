@@ -7,7 +7,10 @@ import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.PreUpdate;
@@ -21,6 +24,11 @@ public class AssessmentEntity {
     private String id = UUID.randomUUID().toString();
 
     private String orgName;
+
+    /** Eigenaar van het dossier; alleen deze gebruiker kan het lezen en wijzigen. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private UserEntity owner;
 
     private Instant createdAt = Instant.now();
 
@@ -45,6 +53,14 @@ public class AssessmentEntity {
 
     public void setOrgName(String orgName) {
         this.orgName = orgName;
+    }
+
+    public UserEntity getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserEntity owner) {
+        this.owner = owner;
     }
 
     public Instant getCreatedAt() {

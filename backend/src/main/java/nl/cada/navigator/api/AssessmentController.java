@@ -20,6 +20,7 @@ import nl.cada.navigator.persistence.AssessmentEntity;
 import nl.cada.navigator.persistence.AssessmentRepository;
 import nl.cada.navigator.persistence.CloudApplicationEntity;
 import nl.cada.navigator.persistence.CloudApplicationRepository;
+import nl.cada.navigator.persistence.UserEntity;
 
 @RestController
 @RequestMapping("/api/assessments")
@@ -43,13 +44,14 @@ public class AssessmentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AssessmentResponse create(@RequestBody(required = false) CreateAssessmentPayload payload) {
+    public AssessmentResponse create(@RequestBody(required = false) CreateAssessmentPayload payload, UserEntity user) {
         String orgName = payload == null || payload.orgName() == null ? "" : payload.orgName().trim();
         if (orgName.isEmpty()) {
             throw new ValidationException("Organisatienaam is verplicht.");
         }
         AssessmentEntity assessment = new AssessmentEntity();
         assessment.setOrgName(orgName);
+        assessment.setOwner(user);
         return AssessmentResponse.from(assessments.save(assessment));
     }
 
@@ -62,11 +64,11 @@ public class AssessmentController {
             int maxRecommendedLevel) {
     }
 
-    /** Portfolio-overzicht voor het dashboard: alle dossiers met gap-statistiek. */
+    /** Portfolio-overzicht voor het dashboard: de eigen dossiers met gap-statistiek. */
     @GetMapping
     @Transactional(readOnly = true)
-    public java.util.List<AssessmentSummary> list() {
-        return assessments.findAll().stream()
+    public java.util.List<AssessmentSummary> list(UserEntity user) {
+        return assessments.findByOwner(user).stream()
                 .sorted(java.util.Comparator.comparing(AssessmentEntity::getCreatedAt).reversed())
                 .map(assessment -> {
                     var report = reportService.buildReport(assessment);
@@ -85,35 +87,35 @@ public class AssessmentController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public AssessmentResponse get(@PathVariable String id) {
-        return AssessmentResponse.from(find(id));
+    public AssessmentResponse get(@PathVariable String id, UserEntity user) {
+        return AssessmentResponse.from(find(id, user));
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public AssessmentResponse rename(@PathVariable String id,
-            @RequestBody(required = false) CreateAssessmentPayload payload) {
+            @RequestBody(required = false) CreateAssessmentPayload payload, UserEntity user) {
         String orgName = payload == null || payload.orgName() == null ? "" : payload.orgName().trim();
         if (orgName.isEmpty()) {
             throw new ValidationException("Organisatienaam is verplicht.");
         }
-        AssessmentEntity assessment = find(id);
+        AssessmentEntity assessment = find(id, user);
         assessment.setOrgName(orgName);
         return AssessmentResponse.from(assessment);
     }
 
     @GetMapping("/{id}/report")
     @Transactional(readOnly = true)
-    public ReportResponse report(@PathVariable String id) {
-        return reportService.buildReport(find(id));
+    public ReportResponse report(@PathVariable String id, UserEntity user) {
+        return reportService.buildReport(find(id, user));
     }
 
     @PostMapping("/{id}/applications")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
     public ApplicationResponse addApplication(@PathVariable String id,
-            @RequestBody(required = false) ApplicationPayload payload) {
-        AssessmentEntity assessment = find(id);
+            @RequestBody(required = false) ApplicationPayload payload, UserEntity user) {
+        AssessmentEntity assessment = find(id, user);
         ParsedApplication data = parser.parse(payload);
 
         CloudApplicationEntity app = new CloudApplicationEntity();
@@ -135,8 +137,15 @@ public class AssessmentController {
         app.setLevelReason(data.levelReason());
     }
 
-    private AssessmentEntity find(String id) {
+    /** Zoekt een dossier van deze gebruiker; andermans dossiers geven 404. */
+    private AssessmentEntity find(String id, UserEntity user) {
         return assessments.findById(id)
+                .filter(assessment -> isOwnedBy(assessment, user))
                 .orElseThrow(() -> new NotFoundException("Sessie niet gevonden."));
+    }
+
+    static boolean isOwnedBy(AssessmentEntity assessment, UserEntity user) {
+        return assessment.getOwner() != null && user != null
+                && assessment.getOwner().getId().equals(user.getId());
     }
 }

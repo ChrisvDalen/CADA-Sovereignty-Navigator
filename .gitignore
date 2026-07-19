@@ -9,6 +9,10 @@ frontend/dist/
 frontend/.angular/
 frontend/npm-debug.log*
 
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+
 # IDE
 .idea/
 .vscode/

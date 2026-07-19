@@ -141,3 +141,30 @@ export interface ReportResponse {
   assessment: AssessmentDto;
   rows: ReportRow[];
 }
+
+export interface UserDto {
+  email: string;
+}
+
+export interface MagicLinkResult {
+  email: string;
+  /** 'response' = link in dit antwoord (dev); 'log' = link staat in het serverlog. */
+  delivered: 'response' | 'log';
+  loginUrl: string | null;
+}
+
+export interface ShareLinkDto {
+  url: string;
+  createdAt: string;
+}
+
+export interface ShareStatus {
+  active: boolean;
+  createdAt: string | null;
+}
+
+export interface SharedReport {
+  orgName: string;
+  sharedAt: string;
+  report: ReportResponse;
+}

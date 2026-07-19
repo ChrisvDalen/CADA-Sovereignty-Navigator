@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
+import { AuthStore } from '../../core/auth-store';
 import { CadaApi } from '../../core/cada-api';
 import { MetaStore } from '../../core/meta-store';
 import { CadaLevel } from '../../core/models';
@@ -163,6 +164,19 @@ interface ResumeInfo {
               Leveranciersreferentiedata →
             </a>
           </p>
+          @if (authStore.user(); as user) {
+            <p class="mt-3 px-1 text-xs text-ink-muted">
+              Aangemeld als <span class="font-semibold text-ink">{{ user.email }}</span>
+              ·
+              <button
+                type="button"
+                (click)="logout()"
+                class="font-semibold text-kobalt underline-offset-4 hover:underline"
+              >
+                Afmelden
+              </button>
+            </p>
+          }
         </div>
       </section>
     </div>
@@ -172,6 +186,7 @@ export class StartPage {
   private readonly api = inject(CadaApi);
   private readonly router = inject(Router);
   protected readonly metaStore = inject(MetaStore);
+  protected readonly authStore = inject(AuthStore);
 
   protected readonly levels: CadaLevel[] = [1, 2, 3, 4];
   protected readonly orgName = signal('');
@@ -216,5 +231,10 @@ export class StartPage {
 
   protected resumeSession(id: string): void {
     this.router.navigate(['/assessment', id, 'toepassingen']);
+  }
+
+  protected async logout(): Promise<void> {
+    await this.authStore.logout();
+    await this.router.navigateByUrl('/login');
   }
 }

@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AccountChip } from './account-chip';
 import { WIZARD_STEPS } from './wizard-steps';
 
 @Component({
   selector: 'app-wizard-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, AccountChip],
   template: `
     <div class="flex min-h-screen flex-col">
       <header class="on-dark bg-nacht text-white">
@@ -16,11 +17,14 @@ import { WIZARD_STEPS } from './wizard-steps';
               CADA Sovereignty Navigator
             </span>
           </a>
-          <span
-            class="hidden truncate font-mono text-xs text-kobalt-200 sm:block"
-            [title]="orgName()"
-          >
-            Dossier · {{ orgName() }}
+          <span class="flex min-w-0 items-center gap-4">
+            <span
+              class="hidden truncate font-mono text-xs text-kobalt-200 sm:block"
+              [title]="orgName()"
+            >
+              Dossier · {{ orgName() }}
+            </span>
+            <app-account-chip />
           </span>
         </div>
       </header>

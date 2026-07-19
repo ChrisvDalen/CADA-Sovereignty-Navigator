@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { CadaApi } from '../../core/cada-api';
 import { CadaLevel, SupplierDetail, SupplierPayload } from '../../core/models';
+import { AccountChip } from '../../shared/account-chip';
 import { Ladder } from '../../shared/ladder';
 
 interface SupplierForm {
@@ -28,7 +29,7 @@ const EMPTY_FORM: SupplierForm = {
 @Component({
   selector: 'app-leveranciers-beheer-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, Ladder],
+  imports: [FormsModule, RouterLink, Ladder, AccountChip],
   template: `
     <div class="flex min-h-screen flex-col">
       <header class="on-dark bg-nacht text-white">
@@ -36,7 +37,10 @@ const EMPTY_FORM: SupplierForm = {
           <a routerLink="/" class="font-display text-lg font-bold tracking-tight">
             CADA Sovereignty Navigator
           </a>
-          <span class="font-mono text-xs text-kobalt-200">Referentiedata · Leveranciers</span>
+          <span class="flex items-center gap-4">
+            <span class="font-mono text-xs text-kobalt-200">Referentiedata · Leveranciers</span>
+            <app-account-chip />
+          </span>
         </div>
       </header>
 
