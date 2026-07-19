@@ -99,6 +99,16 @@ Vereisten: JDK 25, Maven 3.9+, Node.js ≥ 24.15 (vereist door de Angular 22 CLI
 Alle endpoints vereisen een sessiecookie, behalve `/api/auth/**`,
 `/api/share/**` en `/api/meta`.
 
+De volledige, altijd actuele API-documentatie wordt gegenereerd met
+springdoc/OpenAPI:
+
+- OpenAPI-specificatie: `GET /v3/api-docs`
+- Swagger UI: `/swagger-ui.html`
+
+Een getypeerde Angular-client is desgewenst te genereren uit de specificatie,
+bijvoorbeeld met `openapi-generator-cli generate -g typescript-angular -i
+http://localhost:8080/v3/api-docs`.
+
 ## Ontwikkelen
 
 Backend (poort 8080):
