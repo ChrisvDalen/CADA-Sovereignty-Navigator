@@ -194,6 +194,15 @@ export interface SnapshotDiff {
   levelChanges: AppLevelChange[];
 }
 
+export interface AuditRow {
+  at: string;
+  actor: string;
+  action: string;
+  entityType: string;
+  entityName: string;
+  details: string;
+}
+
 export interface UserDto {
   email: string;
 }

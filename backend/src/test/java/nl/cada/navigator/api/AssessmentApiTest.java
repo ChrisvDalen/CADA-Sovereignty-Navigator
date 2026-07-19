@@ -215,7 +215,31 @@ class AssessmentApiTest {
                 assessment.getBody().get("id").asText());
         assertThat(app.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
+        // Wijziging is vastgelegd in de audittrail
+        ResponseEntity<JsonNode> audit = get("/api/audit/suppliers");
+        assertThat(audit.getStatusCode()).isEqualTo(HttpStatus.OK);
+        boolean created2 = false;
+        for (JsonNode row : audit.getBody()) {
+            if (row.get("entityName").asText().equals("Testcloud B.V.")
+                    && row.get("action").asText().equals("CREATE")) {
+                assertThat(row.get("actor").asText()).isEqualTo("test@gemeente.nl");
+                created2 = true;
+            }
+        }
+        assertThat(created2).isTrue();
+
         // Opruimen
         rest.exchange("/api/suppliers/{id}", HttpMethod.DELETE, TestAuth.entity(cookie), JsonNode.class, supplierId);
+
+        // Het verwijderen staat nu ook in de audittrail
+        ResponseEntity<JsonNode> auditNaDelete = get("/api/audit/suppliers");
+        boolean deleted = false;
+        for (JsonNode row : auditNaDelete.getBody()) {
+            if (row.get("entityName").asText().equals("Testcloud B.V.")
+                    && row.get("action").asText().equals("DELETE")) {
+                deleted = true;
+            }
+        }
+        assertThat(deleted).isTrue();
     }
 }

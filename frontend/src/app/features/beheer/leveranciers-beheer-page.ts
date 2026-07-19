@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { CadaApi } from '../../core/cada-api';
-import { CadaLevel, SupplierDetail, SupplierPayload } from '../../core/models';
+import { AuditRow, CadaLevel, SupplierDetail, SupplierPayload } from '../../core/models';
+import { isVerificationStale, VERIFICATION_STALE_MONTHS } from '../../core/verification';
 import { AccountChip } from '../../shared/account-chip';
 import { Ladder } from '../../shared/ladder';
 
@@ -29,7 +31,7 @@ const EMPTY_FORM: SupplierForm = {
 @Component({
   selector: 'app-leveranciers-beheer-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, Ladder, AccountChip],
+  imports: [FormsModule, RouterLink, Ladder, AccountChip, DatePipe],
   template: `
     <div class="flex min-h-screen flex-col">
       <header class="on-dark bg-nacht text-white">
@@ -60,6 +62,14 @@ const EMPTY_FORM: SupplierForm = {
         @if (error(); as message) {
           <p class="mb-4 rounded border border-alert/30 bg-alert-bg px-3 py-2 text-sm text-alert">
             {{ message }}
+          </p>
+        }
+
+        @if (staleCount() > 0) {
+          <p class="mb-4 rounded border border-warn/40 bg-warn-bg px-3 py-2 text-sm text-warn">
+            <span class="font-semibold">{{ staleCount() }}</span>
+            leverancier(s) zijn langer dan {{ staleMonths }} maanden niet geverifieerd. Werk de
+            gegevens bij en sla ze opnieuw op om de verificatiedatum te vernieuwen.
           </p>
         }
 
@@ -97,8 +107,17 @@ const EMPTY_FORM: SupplierForm = {
                     <td class="hidden px-4 py-3 text-ink-muted lg:table-cell">
                       {{ supplier.certifications }}
                     </td>
-                    <td class="hidden px-4 py-3 font-mono text-xs text-ink-faint sm:table-cell">
-                      {{ supplier.lastVerified ?? '—' }}
+                    <td class="hidden px-4 py-3 font-mono text-xs sm:table-cell">
+                      <span [class]="isStale(supplier) ? 'text-warn' : 'text-ink-faint'">
+                        {{ supplier.lastVerified ?? 'nooit' }}
+                      </span>
+                      @if (isStale(supplier)) {
+                        <span
+                          class="mt-1 block w-fit rounded border border-warn/40 bg-warn-bg px-1.5 py-0.5 font-sans text-[11px] font-medium text-warn"
+                        >
+                          Verificatie verouderd
+                        </span>
+                      }
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                       <button
@@ -259,6 +278,51 @@ const EMPTY_FORM: SupplierForm = {
           </form>
         }
 
+        <!-- Audittrail: wie wijzigde wat in de referentiedata -->
+        @if (audit().length > 0) {
+          <section class="mt-10">
+            <h2 class="font-display text-xl font-semibold tracking-tight text-ink">
+              Wijzigingsgeschiedenis
+            </h2>
+            <p class="mt-1 mb-3 text-sm text-ink-muted">
+              De laatste wijzigingen in de leveranciersreferentiedata.
+            </p>
+            <div class="overflow-x-auto rounded-lg border border-line bg-wit">
+              <table class="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr class="border-b border-line text-left">
+                    <th class="eyebrow px-4 py-3 font-medium">Wanneer</th>
+                    <th class="eyebrow px-4 py-3 font-medium">Wie</th>
+                    <th class="eyebrow px-4 py-3 font-medium">Actie</th>
+                    <th class="eyebrow px-4 py-3 font-medium">Leverancier</th>
+                    <th class="eyebrow hidden px-4 py-3 font-medium md:table-cell">Details</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                  @for (row of audit(); track $index) {
+                    <tr class="align-top">
+                      <td class="px-4 py-3 whitespace-nowrap text-ink-muted">
+                        {{ row.at | date: 'd MMM y, HH:mm' }}
+                      </td>
+                      <td class="px-4 py-3 text-ink-muted">{{ row.actor }}</td>
+                      <td class="px-4 py-3">
+                        <span
+                          class="rounded border px-1.5 py-0.5 font-mono text-[11px] font-medium"
+                          [class]="actionClass(row.action)"
+                        >
+                          {{ row.action }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 font-medium text-ink">{{ row.entityName }}</td>
+                      <td class="hidden px-4 py-3 text-ink-muted md:table-cell">{{ row.details }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
         <div class="mt-8">
           <a
             routerLink="/"
@@ -279,13 +343,34 @@ export class LeveranciersBeheerPage {
     'w-full rounded border border-line-strong bg-wit px-3 py-2 text-sm transition-colors placeholder:text-ink-faint focus:border-kobalt';
 
   protected readonly suppliers = signal<SupplierDetail[] | null>(null);
+  protected readonly audit = signal<AuditRow[]>([]);
   protected readonly editingId = signal<string | null>(null); // "new" of supplier-id
   protected readonly form = signal<SupplierForm>(EMPTY_FORM);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  protected readonly staleMonths = VERIFICATION_STALE_MONTHS;
+  protected readonly staleCount = computed(
+    () => (this.suppliers() ?? []).filter((s) => this.isStale(s)).length,
+  );
+
   protected formOpen(): boolean {
     return this.editingId() !== null;
+  }
+
+  protected isStale(supplier: SupplierDetail): boolean {
+    return isVerificationStale(supplier.lastVerified);
+  }
+
+  protected actionClass(action: string): string {
+    switch (action) {
+      case 'CREATE':
+        return 'border-ok/40 bg-ok-bg text-ok';
+      case 'DELETE':
+        return 'border-alert/40 bg-alert-bg text-alert';
+      default:
+        return 'border-line bg-porselein text-ink-muted';
+    }
   }
 
   constructor() {
@@ -375,6 +460,12 @@ export class LeveranciersBeheerPage {
     } catch {
       this.suppliers.set([]);
       this.error.set('De referentiedata kon niet worden geladen.');
+    }
+    try {
+      this.audit.set(await this.api.listSupplierAudit());
+    } catch {
+      // De audittrail is aanvullend; een fout hier mag het beheer niet blokkeren.
+      this.audit.set([]);
     }
   }
 }

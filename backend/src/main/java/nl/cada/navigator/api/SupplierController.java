@@ -20,6 +20,7 @@ import nl.cada.navigator.api.MetaController.SupplierDetail;
 import nl.cada.navigator.domain.CadaDomain;
 import nl.cada.navigator.persistence.SupplierEntity;
 import nl.cada.navigator.persistence.SupplierRepository;
+import nl.cada.navigator.persistence.UserEntity;
 
 /** Beheer van de leveranciersreferentiedata (zonder redeploy). */
 @RestController
@@ -27,9 +28,11 @@ import nl.cada.navigator.persistence.SupplierRepository;
 public class SupplierController {
 
     private final SupplierRepository suppliers;
+    private final AuditService audit;
 
-    public SupplierController(SupplierRepository suppliers) {
+    public SupplierController(SupplierRepository suppliers, AuditService audit) {
         this.suppliers = suppliers;
+        this.audit = audit;
     }
 
     public record SupplierPayload(
@@ -50,32 +53,45 @@ public class SupplierController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public SupplierDetail create(@RequestBody(required = false) SupplierPayload payload) {
+    public SupplierDetail create(@RequestBody(required = false) SupplierPayload payload, UserEntity user) {
         SupplierEntity entity = new SupplierEntity();
-        apply(entity, validate(payload, null));
+        SupplierPayload valid = validate(payload, null);
+        apply(entity, valid);
         int nextPosition = suppliers.findAllByOrderByPositionAsc().stream()
                 .mapToInt(SupplierEntity::getPosition)
                 .max()
                 .orElse(-1) + 1;
         entity.setPosition(nextPosition);
-        return toDetail(suppliers.save(entity));
+        SupplierDetail saved = toDetail(suppliers.save(entity));
+        audit.record(user, "CREATE", AuditService.SUPPLIER, valid.name(),
+                "Max. niveau " + valid.maxLevel());
+        return saved;
     }
 
     @PutMapping("/{id}")
     @Transactional
-    public SupplierDetail update(@PathVariable String id, @RequestBody(required = false) SupplierPayload payload) {
+    public SupplierDetail update(@PathVariable String id, @RequestBody(required = false) SupplierPayload payload,
+            UserEntity user) {
         SupplierEntity entity = suppliers.findById(id)
                 .orElseThrow(() -> new NotFoundException("Leverancier niet gevonden."));
-        apply(entity, validate(payload, id));
+        int oldLevel = entity.getMaxLevel();
+        SupplierPayload valid = validate(payload, id);
+        apply(entity, valid);
+        String change = oldLevel == valid.maxLevel()
+                ? "Bijgewerkt"
+                : "Max. niveau " + oldLevel + " → " + valid.maxLevel();
+        audit.record(user, "UPDATE", AuditService.SUPPLIER, valid.name(), change);
         return toDetail(entity);
     }
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Map<String, Boolean> delete(@PathVariable String id) {
+    public Map<String, Boolean> delete(@PathVariable String id, UserEntity user) {
         SupplierEntity entity = suppliers.findById(id)
                 .orElseThrow(() -> new NotFoundException("Leverancier niet gevonden."));
+        String name = entity.getName();
         suppliers.delete(entity);
+        audit.record(user, "DELETE", AuditService.SUPPLIER, name, "Verwijderd");
         return Map.of("ok", true);
     }
 

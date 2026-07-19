@@ -7,6 +7,7 @@ import {
   ApplicationPayload,
   AssessmentDto,
   AssessmentSummary,
+  AuditRow,
   ImportResult,
   LevelPreview,
   MagicLinkResult,
@@ -92,6 +93,10 @@ export class CadaApi {
 
   deleteSupplier(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`/api/suppliers/${id}`)).then(() => undefined);
+  }
+
+  listSupplierAudit(): Promise<AuditRow[]> {
+    return firstValueFrom(this.http.get<AuditRow[]>('/api/audit/suppliers'));
   }
 
   // — Authenticatie —
