@@ -63,7 +63,8 @@ public class SupplierController {
 
     @PutMapping("/{id}")
     @Transactional
-    public SupplierDetail update(@PathVariable String id, @RequestBody(required = false) SupplierPayload payload) {
+    public SupplierDetail update(@PathVariable("id") String id,
+            @RequestBody(required = false) SupplierPayload payload) {
         SupplierEntity entity = suppliers.findById(id)
                 .orElseThrow(() -> new NotFoundException("Leverancier niet gevonden."));
         apply(entity, validate(payload, id));
@@ -72,7 +73,7 @@ public class SupplierController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Map<String, Boolean> delete(@PathVariable String id) {
+    public Map<String, Boolean> delete(@PathVariable("id") String id) {
         SupplierEntity entity = suppliers.findById(id)
                 .orElseThrow(() -> new NotFoundException("Leverancier niet gevonden."));
         suppliers.delete(entity);

@@ -58,11 +58,11 @@ SHA-256-hash opgeslagen.
 ## Architectuur
 
 ```
-backend/    Spring Boot 3 (Java 25) REST API + H2-persistentie
+backend/    Spring Boot 4.1 (Java 26) REST API + H2-persistentie
 frontend/   Angular 22 (standalone components, signals) + Tailwind CSS 4
 ```
 
-Vereisten: JDK 25, Maven 3.9+, Node.js ≥ 24.15 (vereist door de Angular 22 CLI).
+Vereisten: JDK 26, Maven 3.9+, Node.js ≥ 24.15 (vereist door de Angular 22 CLI).
 
 - **Backend** is de bron van waarheid voor alle domeinlogica: de beslisboom,
   de leverancierstoets, de aanbevelingen en de prioritering
@@ -139,7 +139,7 @@ cd frontend && npm run e2e
 Elke push naar `main` en elke pull request draait via GitHub Actions
 (`.github/workflows/ci.yml`) drie jobs:
 
-1. **Backend** — `mvn verify` op Temurin JDK 25;
+1. **Backend** — `mvn verify` op Temurin JDK 26;
 2. **Frontend** — `ng test` (Vitest) + productiebuild op Node 24;
 3. **E2E** — de Playwright-smoketest tegen de echte stack (backend-jar met
    in-memory H2 + Angular-dev-server).
