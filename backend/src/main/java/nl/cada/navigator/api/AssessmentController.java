@@ -87,13 +87,13 @@ public class AssessmentController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public AssessmentResponse get(@PathVariable String id, UserEntity user) {
+    public AssessmentResponse get(@PathVariable("id") String id, UserEntity user) {
         return AssessmentResponse.from(find(id, user));
     }
 
     @PatchMapping("/{id}")
     @Transactional
-    public AssessmentResponse rename(@PathVariable String id,
+    public AssessmentResponse rename(@PathVariable("id") String id,
             @RequestBody(required = false) CreateAssessmentPayload payload, UserEntity user) {
         String orgName = payload == null || payload.orgName() == null ? "" : payload.orgName().trim();
         if (orgName.isEmpty()) {
@@ -106,14 +106,14 @@ public class AssessmentController {
 
     @GetMapping("/{id}/report")
     @Transactional(readOnly = true)
-    public ReportResponse report(@PathVariable String id, UserEntity user) {
+    public ReportResponse report(@PathVariable("id") String id, UserEntity user) {
         return reportService.buildReport(find(id, user));
     }
 
     @PostMapping("/{id}/applications")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public ApplicationResponse addApplication(@PathVariable String id,
+    public ApplicationResponse addApplication(@PathVariable("id") String id,
             @RequestBody(required = false) ApplicationPayload payload, UserEntity user) {
         AssessmentEntity assessment = find(id, user);
         ParsedApplication data = parser.parse(payload);

@@ -31,7 +31,7 @@ public class ApplicationController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ApplicationResponse update(@PathVariable String id,
+    public ApplicationResponse update(@PathVariable("id") String id,
             @RequestBody(required = false) ApplicationPayload payload, UserEntity user) {
         ParsedApplication data = parser.parse(payload);
         CloudApplicationEntity app = find(id, user);
@@ -41,7 +41,7 @@ public class ApplicationController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Map<String, Boolean> delete(@PathVariable String id, UserEntity user) {
+    public Map<String, Boolean> delete(@PathVariable("id") String id, UserEntity user) {
         CloudApplicationEntity app = find(id, user);
         applications.delete(app);
         return Map.of("ok", true);

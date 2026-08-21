@@ -57,7 +57,7 @@ public class ShareController {
     @PostMapping("/api/assessments/{id}/share")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public ShareLinkResponse create(@PathVariable String id, UserEntity user) {
+    public ShareLinkResponse create(@PathVariable("id") String id, UserEntity user) {
         AssessmentEntity assessment = findOwned(id, user);
         shareLinks.deleteByAssessment(assessment);
 
@@ -71,7 +71,7 @@ public class ShareController {
 
     @GetMapping("/api/assessments/{id}/share")
     @Transactional(readOnly = true)
-    public ShareStatusResponse status(@PathVariable String id, UserEntity user) {
+    public ShareStatusResponse status(@PathVariable("id") String id, UserEntity user) {
         AssessmentEntity assessment = findOwned(id, user);
         return shareLinks.findByAssessment(assessment).stream()
                 .findFirst()
@@ -81,7 +81,7 @@ public class ShareController {
 
     @DeleteMapping("/api/assessments/{id}/share")
     @Transactional
-    public Map<String, Boolean> revoke(@PathVariable String id, UserEntity user) {
+    public Map<String, Boolean> revoke(@PathVariable("id") String id, UserEntity user) {
         AssessmentEntity assessment = findOwned(id, user);
         shareLinks.deleteByAssessment(assessment);
         return Map.of("ok", true);
@@ -90,7 +90,7 @@ public class ShareController {
     /** Publiek: het rapport achter een deellink, zonder aanmelding. */
     @GetMapping("/api/share/{token}")
     @Transactional(readOnly = true)
-    public SharedReportResponse shared(@PathVariable String token) {
+    public SharedReportResponse shared(@PathVariable("token") String token) {
         ShareLinkEntity link = shareLinks.findByTokenHash(AuthService.hash(token))
                 .orElseThrow(() -> new NotFoundException("Deellink niet gevonden of ingetrokken."));
         AssessmentEntity assessment = link.getAssessment();
